@@ -1,4 +1,4 @@
-# Plato-Git
+# Aristotle
 
 Run complexity reports on git project and build full sets of data points in pure JSON format
 
@@ -8,12 +8,10 @@ npm install plato-git
 
 # Usage
 
-var platogit = require("plato-git");
+var aristotle = require("aristotle");
 
-platogit(/** fileGlob **/, /** Plato Options **/, /** callback **/);
+aristotle(/** fileGlob **/, /** Plato Options **/, /** callback **/);
 
-platogit("myproj/**/*.js", {}, function(jsonResults){
+aristotle("myproj/**/*.js", {}, function(jsonResults){
 	// process jsonResults
 });
-
-
