@@ -4,7 +4,7 @@ Run complexity reports on git project and build full sets of data points in pure
 
 # Getting package
 
-npm install plato-git
+npm install aristole
 
 # Usage
 
