@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - ajax/ajax.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>ajax/ajax.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">64.53</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">466</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">71.51</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">4.19</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">jQuery.fn.extend({
+	load: function( url, params, callback ) {
+		if ( jQuery.isFunction( url ) )
+			return this.bind(&quot;load&quot;, url);
+
+		var off = url.indexOf(&quot; &quot;);
+		if ( off &gt;= 0 ) {
+			var selector = url.slice(off, url.length);
+			url = url.slice(0, off);
+		}
+
+		callback = callback || function(){};
+
+		// Default to a GET request
+		var type = &quot;GET&quot;;
+
+		// If the second parameter was provided
+		if ( params )
+			// If it&#039;s a function
+			if ( jQuery.isFunction( params ) ) {
+				// We assume that it&#039;s the callback
+				callback = params;
+				params = null;
+
+			// Otherwise, build a param string
+			} else {
+				params = jQuery.param( params );
+				type = &quot;POST&quot;;
+			}
+
+		var self = this;
+
+		// Request the remote document
+		jQuery.ajax({
+			url: url,
+			type: type,
+			data: params,
+			complete: function(res, status){
+				// If successful, inject the HTML into all the matched elements
+				if ( status == &quot;success&quot; || status == &quot;notmodified&quot; )
+					// See if a selector was specified
+					self.html( selector ?
+						// Create a dummy div to hold the results
+						jQuery(&quot;&lt;div/&gt;&quot;)
+							// inject the contents of the document in, removing the scripts
+							// to avoid any &#039;Permission Denied&#039; errors in IE
+							.append(res.responseText.replace(/&lt;script(.|\s)*?\/script&gt;/g, &quot;&quot;))
+
+							// Locate the specified elements
+							.find(selector) :
+
+						// If not, just inject the full result
+						res.responseText );
+
+				// Add delay to account for Safari&#039;s delay in globalEval
+				setTimeout(function(){
+					self.each( callback, [res.responseText, status, res] );
+				}, 13);
+			}
+		});
+		return this;
+	},
+
+	serialize: function() {
+		return jQuery.param(this.serializeArray());
+	},
+	serializeArray: function() {
+		return this.map(function(){
+			return jQuery.nodeName(this, &quot;form&quot;) ?
+				jQuery.makeArray(this.elements) : this;
+		})
+		.filter(function(){
+			return this.name &amp;&amp; !this.disabled &amp;&amp; 
+				(this.checked || /select|textarea/i.test(this.nodeName) || 
+					/text|hidden|password/i.test(this.type));
+		})
+		.map(function(i, elem){			var val = jQuery(this).val();
+			return val == null ? null :
+				val.constructor == Array ?
+					jQuery.map( val, function(i, val){						return {name: elem.name, value: val};
+					}) :
+					{name: elem.name, value: val};
+		}).get();	}
+});
+
+// Attach a bunch of functions for handling common AJAX events
+jQuery.each( &quot;ajaxStart,ajaxStop,ajaxComplete,ajaxError,ajaxSuccess,ajaxSend&quot;.split(&quot;,&quot;), function(i,o){
+	jQuery.fn[o] = function(f){
+		return this.bind(o, f);
+	};
+});
+
+var jsc = (new Date).getTime();
+
+jQuery.extend({
+	get: function( url, data, callback, type ) {
+		// shift arguments if data argument was ommited
+		if ( jQuery.isFunction( data ) ) {
+			callback = data;
+			data = null;
+		}
+		
+		return jQuery.ajax({
+			type: &quot;GET&quot;,
+			url: url,
+			data: data,
+			success: callback,
+			dataType: type
+		});
+	},
+
+	getScript: function( url, callback ) {
+		return jQuery.get(url, null, callback, &quot;script&quot;);
+	},
+
+	getJSON: function( url, data, callback ) {
+		return jQuery.get(url, data, callback, &quot;json&quot;);
+	},
+
+	post: function( url, data, callback, type ) {
+		if ( jQuery.isFunction( data ) ) {
+			callback = data;
+			data = {};
+		}
+
+		return jQuery.ajax({
+			type: &quot;POST&quot;,
+			url: url,
+			data: data,
+			success: callback,
+			dataType: type
+		});
+	},
+
+	ajaxSetup: function( settings ) {
+		jQuery.extend( jQuery.ajaxSettings, settings );
+	},
+
+	ajaxSettings: {
+		global: true,
+		type: &quot;GET&quot;,
+		timeout: 0,
+		contentType: &quot;application/x-www-form-urlencoded&quot;,
+		processData: true,
+		async: true,
+		data: null
+	},
+	
+	// Last-Modified header cache for next request
+	lastModified: {},
+
+	ajax: function( s ) {
+		var jsonp, jsre = /=(\?|%3F)/g, status, data;
+
+		// Extend the settings, but re-extend &#039;s&#039; so that it can be
+		// checked again later (in the test suite, specifically)
+		s = jQuery.extend(true, s, jQuery.extend(true, {}, jQuery.ajaxSettings, s));
+
+		// convert data if not already a string
+		if ( s.data &amp;&amp; s.processData &amp;&amp; typeof s.data != &quot;string&quot; )
+			s.data = jQuery.param(s.data);
+
+		// Break the data into one single string
+		var q = s.url.indexOf(&quot;?&quot;);
+		if ( q &gt; -1 ) {
+			s.data = (s.data ? s.data + &quot;&amp;&quot; : &quot;&quot;) + s.url.slice(q + 1);
+			s.url = s.url.slice(0, q);
+		}
+
+		// Handle JSONP Parameter Callbacks
+		if ( s.dataType == &quot;jsonp&quot; ) {
+			if ( !s.data || !s.data.match(jsre) )
+				s.data = (s.data ? s.data + &quot;&amp;&quot; : &quot;&quot;) + (s.jsonp || &quot;callback&quot;) + &quot;=?&quot;;
+			s.dataType = &quot;json&quot;;
+		}
+
+		// Build temporary JSONP function
+		if ( s.dataType == &quot;json&quot; &amp;&amp; s.data &amp;&amp; s.data.match(jsre) ) {
+			jsonp = &quot;jsonp&quot; + jsc++;
+			s.data = s.data.replace(jsre, &quot;=&quot; + jsonp);
+
+			// We need to make sure
+			// that a JSONP style response is executed properly
+			s.dataType = &quot;script&quot;;
+
+			// Handle JSONP-style loading
+			window[ jsonp ] = function(tmp){
+				data = tmp;
+				success();
+				// Garbage collect
+				window[ jsonp ] = undefined;
+				try{ delete window[ jsonp ]; } catch(e){}
+			};
+		}
+
+		if ( s.dataType == &quot;script&quot; &amp;&amp; s.cache == null )
+			s.cache = false;
+
+		if ( s.cache === false &amp;&amp; s.type.toLowerCase() == &quot;get&quot; )
+			s.data = (s.data ? s.data + &quot;&amp;&quot; : &quot;&quot;) + &quot;_=&quot; + (new Date()).getTime();
+
+		// If data is available, append data to url for get requests
+		if ( s.data &amp;&amp; s.type.toLowerCase() == &quot;get&quot; ) {
+			s.url += &quot;?&quot; + s.data;
+
+			// IE likes to send both get and post data, prevent this
+			s.data = null;
+		}
+
+		// Watch for a new set of requests
+		if ( s.global &amp;&amp; ! jQuery.active++ )
+			jQuery.event.trigger( &quot;ajaxStart&quot; );
+
+		// If we&#039;re requesting a remote document
+		// and trying to load JSON or Script
+		if ( !s.url.indexOf(&quot;http&quot;) &amp;&amp; s.dataType == &quot;script&quot; ) {
+			var script = document.createElement(&quot;script&quot;);
+			script.src = s.url;
+
+			// Handle Script loading
+			if ( !jsonp &amp;&amp; (s.success || s.complete) ) {
+				var done = false;
+
+				// Attach handlers for all browsers
+				script.onload = script.onreadystatechange = function(){
+					if ( !done &amp;&amp; (!this.readyState || 
+							this.readyState == &quot;loaded&quot; || this.readyState == &quot;complete&quot;) ) {
+						done = true;
+						success();
+						complete();
+						document.body.removeChild( script );
+					}
+				};
+			}
+
+			document.body.appendChild(script);
+
+			// We handle everything using the script element injection
+			return;
+		}
+
+		var requestDone = false;
+
+		// Create the request object; Microsoft failed to properly
+		// implement the XMLHttpRequest in IE7, so we use the ActiveXObject when it is available
+		var xml = window.ActiveXObject ? new ActiveXObject(&quot;Microsoft.XMLHTTP&quot;) : new XMLHttpRequest();
+
+		// Open the socket
+		xml.open(s.type, s.url, s.async);
+
+		// Set the correct header, if data is being sent
+		if ( s.data )
+			xml.setRequestHeader(&quot;Content-Type&quot;, s.contentType);
+
+		// Set the If-Modified-Since header, if ifModified mode.
+		if ( s.ifModified )
+			xml.setRequestHeader(&quot;If-Modified-Since&quot;,
+				jQuery.lastModified[s.url] || &quot;Thu, 01 Jan 1970 00:00:00 GMT&quot; );
+
+		// Set header so the called script knows that it&#039;s an XMLHttpRequest
+		xml.setRequestHeader(&quot;X-Requested-With&quot;, &quot;XMLHttpRequest&quot;);
+
+		// Allow custom headers/mimetypes
+		if ( s.beforeSend )
+			s.beforeSend(xml);
+			
+		if ( s.global )
+		    jQuery.event.trigger(&quot;ajaxSend&quot;, [xml, s]);
+
+		// Wait for a response to come back
+		var onreadystatechange = function(isTimeout){
+			// The transfer is complete and the data is available, or the request timed out
+			if ( !requestDone &amp;&amp; xml &amp;&amp; (xml.readyState == 4 || isTimeout == &quot;timeout&quot;) ) {
+				requestDone = true;
+				
+				// clear poll interval
+				if (ival) {
+					clearInterval(ival);
+					ival = null;
+				}
+				
+				status = isTimeout == &quot;timeout&quot; &amp;&amp; &quot;timeout&quot; ||
+					!jQuery.httpSuccess( xml ) &amp;&amp; &quot;error&quot; ||
+					s.ifModified &amp;&amp; jQuery.httpNotModified( xml, s.url ) &amp;&amp; &quot;notmodified&quot; ||
+					&quot;success&quot;;
+
+				if ( status == &quot;success&quot; ) {
+					// Watch for, and catch, XML document parse errors
+					try {
+						// process the data (runs the xml through httpData regardless of callback)
+						data = jQuery.httpData( xml, s.dataType );
+					} catch(e) {
+						status = &quot;parsererror&quot;;
+					}
+				}
+
+				// Make sure that the request was successful or notmodified
+				if ( status == &quot;success&quot; ) {
+					// Cache Last-Modified header, if ifModified mode.
+					var modRes;
+					try {
+						modRes = xml.getResponseHeader(&quot;Last-Modified&quot;);
+					} catch(e) {} // swallow exception thrown by FF if header is not available
+	
+					if ( s.ifModified &amp;&amp; modRes )
+						jQuery.lastModified[s.url] = modRes;
+
+					// JSONP handles its own success callback
+					if ( !jsonp )
+						success();	
+				} else
+					jQuery.handleError(s, xml, status);
+
+				// Fire the complete handlers
+				complete();
+
+				// Stop memory leaks
+				if ( s.async )
+					xml = null;
+			}
+		};
+		
+		if ( s.async ) {
+			// don&#039;t attach the handler to the request, just poll it instead
+			var ival = setInterval(onreadystatechange, 13); 
+
+			// Timeout checker
+			if ( s.timeout &gt; 0 )
+				setTimeout(function(){
+					// Check to see if the request is still happening
+					if ( xml ) {
+						// Cancel the request
+						xml.abort();
+	
+						if( !requestDone )
+							onreadystatechange( &quot;timeout&quot; );
+					}
+				}, s.timeout);
+		}
+			
+		// Send the data
+		try {
+			xml.send(s.data);
+		} catch(e) {
+			jQuery.handleError(s, xml, null, e);
+		}
+		
+		// firefox 1.5 doesn&#039;t fire statechange for sync requests
+		if ( !s.async )
+			onreadystatechange();
+		
+		// return XMLHttpRequest to allow aborting the request etc.
+		return xml;
+
+		function success(){
+			// If a local callback was specified, fire it and pass it the data
+			if ( s.success )
+				s.success( data, status );
+
+			// Fire the global callback
+			if ( s.global )
+				jQuery.event.trigger( &quot;ajaxSuccess&quot;, [xml, s] );
+		}
+
+		function complete(){
+			// Process result
+			if ( s.complete )
+				s.complete(xml, status);
+
+			// The request was completed
+			if ( s.global )
+				jQuery.event.trigger( &quot;ajaxComplete&quot;, [xml, s] );
+
+			// Handle the global AJAX counter
+			if ( s.global &amp;&amp; ! --jQuery.active )
+				jQuery.event.trigger( &quot;ajaxStop&quot; );
+		}
+	},
+
+	handleError: function( s, xml, status, e ) {
+		// If a local callback was specified, fire it
+		if ( s.error ) s.error( xml, status, e );
+
+		// Fire the global callback
+		if ( s.global )
+			jQuery.event.trigger( &quot;ajaxError&quot;, [xml, s, e] );
+	},
+
+	// Counter for holding the number of active queries
+	active: 0,
+
+	// Determines if an XMLHttpRequest was successful or not
+	httpSuccess: function( r ) {
+		try {
+			return !r.status &amp;&amp; location.protocol == &quot;file:&quot; ||
+				( r.status &gt;= 200 &amp;&amp; r.status &lt; 300 ) || r.status == 304 ||
+				jQuery.browser.safari &amp;&amp; r.status == undefined;
+		} catch(e){}
+		return false;
+	},
+
+	// Determines if an XMLHttpRequest returns NotModified
+	httpNotModified: function( xml, url ) {
+		try {
+			var xmlRes = xml.getResponseHeader(&quot;Last-Modified&quot;);
+
+			// Firefox always returns 200. check Last-Modified date
+			return xml.status == 304 || xmlRes == jQuery.lastModified[url] ||
+				jQuery.browser.safari &amp;&amp; xml.status == undefined;
+		} catch(e){}
+		return false;
+	},
+
+	httpData: function( r, type ) {
+		var ct = r.getResponseHeader(&quot;content-type&quot;);
+		var xml = type == &quot;xml&quot; || !type &amp;&amp; ct &amp;&amp; ct.indexOf(&quot;xml&quot;) &gt;= 0;
+		var data = xml ? r.responseXML : r.responseText;
+
+		if ( xml &amp;&amp; data.documentElement.tagName == &quot;parsererror&quot; )
+			throw &quot;parsererror&quot;;
+
+		// If the type is &quot;script&quot;, eval it in global context
+		if ( type == &quot;script&quot; )
+			jQuery.globalEval( data );
+
+		// Get the JavaScript object, if JSON is used.
+		if ( type == &quot;json&quot; )
+			data = eval(&quot;(&quot; + data + &quot;)&quot;);
+
+		return data;
+	},
+
+	// Serialize an array of form elements or a set of
+	// key/values into a query string
+	param: function( a ) {
+		var s = [];
+
+		// If an array was passed in, assume that it is an array
+		// of form elements
+		if ( a.constructor == Array || a.jquery )
+			// Serialize the form elements
+			jQuery.each( a, function(){
+				s.push( encodeURIComponent(this.name) + &quot;=&quot; + encodeURIComponent( this.value ) );
+			});
+
+		// Otherwise, assume that it&#039;s an object of key/value pairs
+		else
+			// Serialize the key/values
+			for ( var j in a )
+				// If the value is an array then the key names need to be repeated
+				if ( a[j] &amp;&amp; a[j].constructor == Array )
+					jQuery.each( a[j], function(){
+						s.push( encodeURIComponent(j) + &quot;=&quot; + encodeURIComponent( this ) );
+					});
+				else
+					s.push( encodeURIComponent(j) + &quot;=&quot; + encodeURIComponent( a[j] ) );
+
+		// Return the resulting serialization
+		return s.join(&quot;&amp;&quot;).replace(/%20/g, &quot;+&quot;);
+	}
+
+});</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

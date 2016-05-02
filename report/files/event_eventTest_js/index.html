@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - event/eventTest.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>event/eventTest.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">73.55</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">194</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">32.11</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.85</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">module(&quot;event&quot;);
+
+test(&quot;bind()&quot;, function() {
+	expect(15);
+
+	var handler = function(event) {
+		ok( event.data, &quot;bind() with data, check passed data exists&quot; );
+		ok( event.data.foo == &quot;bar&quot;, &quot;bind() with data, Check value of passed data&quot; );
+	};
+	$(&quot;#firstp&quot;).bind(&quot;click&quot;, {foo: &quot;bar&quot;}, handler).click().unbind(&quot;click&quot;, handler);
+	
+	ok( !$(&quot;#firstp&quot;).get(0).$events, &quot;Event handler unbound when using data.&quot; );
+	
+	reset();
+	var handler = function(event, data) {
+		ok( event.data, &quot;check passed data exists&quot; );
+		ok( event.data.foo == &quot;bar&quot;, &quot;Check value of passed data&quot; );
+		ok( data, &quot;Check trigger data&quot; );
+		ok( data.bar == &quot;foo&quot;, &quot;Check value of trigger data&quot; );
+	};
+	$(&quot;#firstp&quot;).bind(&quot;click&quot;, {foo: &quot;bar&quot;}, handler).trigger(&quot;click&quot;, [{bar: &quot;foo&quot;}]).unbind(handler);
+	
+	reset();
+	var handler = function(event) {
+		ok ( !event.data, &quot;Check that no data is added to the event object&quot; );
+	};
+	$(&quot;#firstp&quot;).bind(&quot;click&quot;, handler).trigger(&quot;click&quot;);
+	
+	
+	// events don&#039;t work with iframes, see #939 - this test fails in IE because of contentDocument
+	// var doc = document.getElementById(&quot;iframe&quot;).contentDocument;
+	// 
+	// doc.body.innerHTML = &quot;&lt;input type=&#039;text&#039;/&gt;&quot;;
+	//  
+	// var input = doc.getElementsByTagName(&quot;input&quot;)[0];
+	//  
+	// $(input).bind(&quot;click&quot;,function() {
+	// 	ok( true, &quot;Binding to element inside iframe&quot; );
+	// }).click();
+	
+	var counter = 0;
+	function selectOnChange(event) {
+		equals( event.data, counter++, &quot;Event.data is not a global event object&quot; );
+	};
+	$(&quot;#form select&quot;).each(function(i){
+		$(this).bind(&#039;change&#039;, i, selectOnChange);
+	}).trigger(&#039;change&#039;);
+
+	reset();
+
+        $(&quot;#firstp&quot;).bind(&quot;click&quot;,function(e){
+		ok(true, &quot;Normal click triggered&quot;);
+        });
+
+        $(&quot;#firstp&quot;).bind(&quot;click.test&quot;,function(e){
+		ok(true, &quot;Namespaced click triggered&quot;);
+        });
+
+	// Trigger both bound fn (2)
+        $(&quot;#firstp&quot;).trigger(&quot;click&quot;);
+
+	// Trigger one bound fn (1)
+        $(&quot;#firstp&quot;).trigger(&quot;click.test&quot;);
+
+	// Remove only the one fn
+        $(&quot;#firstp&quot;).unbind(&quot;click.test&quot;);
+
+	// Trigger the remaining fn (1)
+        $(&quot;#firstp&quot;).trigger(&quot;click&quot;);
+});
+
+test(&quot;click()&quot;, function() {
+	expect(4);
+	$(&#039;&lt;li&gt;&lt;a href=&quot;#&quot;&gt;Change location&lt;/a&gt;&lt;/li&gt;&#039;).prependTo(&#039;#firstUL&#039;).find(&#039;a&#039;).bind(&#039;click&#039;, function() {
+	    var close = $(&#039;spanx&#039;, this); // same with $(this).find(&#039;span&#039;);
+	    ok( close.length == 0, &quot;Context element does not exist, length must be zero&quot; );
+	    ok( !close[0], &quot;Context element does not exist, direct access to element must return undefined&quot; );
+	    return false;
+	}).click();
+	
+	$(&quot;#check1&quot;).click(function() {
+		ok( true, &quot;click event handler for checkbox gets fired twice, see #815&quot; );
+	}).click();
+	
+	var counter = 0;
+	$(&#039;#firstp&#039;)[0].onclick = function(event) {
+		counter++;
+	};
+	$(&#039;#firstp&#039;).click();
+	ok( counter == 1, &quot;Check that click, triggers onclick event handler also&quot; );
+});
+
+test(&quot;unbind(event)&quot;, function() {
+	expect(6);
+	var el = $(&quot;#firstp&quot;);
+	el.click(function() {
+		ok( true, &quot;Fake normal bind&quot; );
+	});
+	el.click(function(event) {
+		el.unbind(event);
+		ok( true, &quot;Fake onebind&quot; );
+	});
+	el.click().click();
+	
+	el.click(function() { return; });
+	el.unbind(&#039;click&#039;);
+	ok( !el[0].onclick, &quot;Handler is removed&quot; ); // Bug #964
+
+	el.click(function() { return; });
+	el.unbind(&#039;change&#039;,function(){ return; });
+	for (var ret in el[0].$events[&#039;click&#039;]) break;
+	ok( ret, &quot;Extra handlers weren&#039;t accidentally removed.&quot; );
+
+	el.unbind(&#039;click&#039;);
+	ok( !el[0].$events, &quot;Removed the events expando after all handlers are unbound.&quot; );
+});
+
+test(&quot;trigger(event, [data], [fn])&quot;, function() {
+	expect(40);
+
+	var handler = function(event, a, b, c) {
+		equals( event.type, &quot;click&quot;, &quot;check passed data&quot; );
+		equals( a, 1, &quot;check passed data&quot; );
+		equals( b, &quot;2&quot;, &quot;check passed data&quot; );
+		equals( c, &quot;abc&quot;, &quot;check passed data&quot; );
+		return &quot;test&quot;;
+	};
+
+	var handler2 = function(a, b, c) {
+		equals( a, 1, &quot;check passed data&quot; );
+		equals( b, &quot;2&quot;, &quot;check passed data&quot; );
+		equals( c, &quot;abc&quot;, &quot;check passed data&quot; );
+		return &quot;test2&quot;;
+	};
+
+	// Simulate a &quot;native&quot; click
+	$(&quot;#firstp&quot;)[0].click = function(){
+		ok( true, &quot;Native call was triggered&quot; );
+	};
+
+	// Triggers handlrs and native
+	// Trigger 5
+	$(&quot;#firstp&quot;).bind(&quot;click&quot;, handler).trigger(&quot;click&quot;, [1, &quot;2&quot;, &quot;abc&quot;]);
+
+	// Triggers handlers, native, and extra fn
+	// Triggers 8
+	$(&quot;#firstp&quot;).trigger(&quot;click&quot;, [1, &quot;2&quot;, &quot;abc&quot;], handler2);
+
+	// Simulate a &quot;native&quot; click
+	$(&quot;#firstp&quot;)[0].click = function(){
+		ok( false, &quot;Native call was triggered&quot; );
+	};
+
+	// Trigger only the handlers (no native)
+	// Triggers 5
+	equals( $(&quot;#firstp&quot;).triggerHandler(&quot;click&quot;, [1, &quot;2&quot;, &quot;abc&quot;]), &quot;test&quot;, &quot;Verify handler response&quot; );
+
+	// Trigger only the handlers (no native) and extra fn
+	// Triggers 8
+	equals( $(&quot;#firstp&quot;).triggerHandler(&quot;click&quot;, [1, &quot;2&quot;, &quot;abc&quot;], handler2), &quot;test&quot;, &quot;Verify handler response&quot; );
+
+	// Build fake click event to pass in
+	var eventObj = jQuery.event.fix({ type: &quot;click&quot;, target: document.body });
+
+	// Trigger only the handlers (no native), with external event obj
+	// Triggers 5
+	equals( $(&quot;#firstp&quot;).triggerHandler(&quot;foo&quot;, [eventObj, 1, &quot;2&quot;, &quot;abc&quot;]), &quot;test&quot;, &quot;Verify handler response&quot; );
+
+	// Trigger only the handlers (no native) and extra fn, with external event obj
+	// Triggers 9
+	equals( $(&quot;#firstp&quot;).triggerHandler(&quot;foo&quot;, [eventObj, 1, &quot;2&quot;, &quot;abc&quot;], handler), &quot;test&quot;, &quot;Verify handler response&quot; );
+});
+
+test(&quot;toggle(Function, Function)&quot;, function() {
+	expect(4);
+	var count = 0,
+		fn1 = function(e) { count++; },
+		fn2 = function(e) { count--; },
+		preventDefault = function(e) { e.preventDefault() },
+		link = $(&#039;#mark&#039;);
+	link.click(preventDefault).click().toggle(fn1, fn2).click().click().click().click().click();
+	ok( count == 1, &quot;Check for toggle(fn, fn)&quot; );
+	
+	var first = 0;
+	$(&quot;#simon1&quot;).one(&quot;click&quot;, function() {
+		ok( true, &quot;Execute event only once&quot; );
+		$(this).toggle(function() {
+			ok( first++ == 0, &quot;toggle(Function,Function) assigned from within one(&#039;xxx&#039;), see #1054&quot; );
+		}, function() {
+			ok( first == 1, &quot;toggle(Function,Function) assigned from within one(&#039;xxx&#039;), see #1054&quot; );
+		});
+		return false;
+	}).click().click().click();
+});</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

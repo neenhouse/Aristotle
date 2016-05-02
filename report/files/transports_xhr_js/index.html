@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - transports/xhr.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>transports/xhr.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">64.37</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">191</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">38.44</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">0.79</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">(function( jQuery ) {
+
+var // Next fake timer id
+	xhrPollingId = jQuery.now(),
+	
+	// Callbacks hashtable
+	xhrs = {},
+
+	// #5280: see end of file
+	xhrUnloadAbortMarker = [];
+
+	
+jQuery.ajax.transport( function( s , determineDataType ) {
+	
+	// Cross domain only allowed if supported through XMLHttpRequest
+	if ( ! s.crossDomain || jQuery.support.cors ) {
+		
+		var callback;
+		
+		return {
+			
+			send: function(headers, complete) {
+				
+				var xhr = s.xhr(),
+					handle;
+				
+				// Open the socket
+				// Passing null username, generates a login popup on Opera (#2865)
+				if ( s.username ) {
+					xhr.open(s.type, s.url, s.async, s.username, s.password);
+				} else {
+					xhr.open(s.type, s.url, s.async);
+				}
+				
+				// Requested-With header
+				// Not set for crossDomain requests with no content
+				// (see why at http://trac.dojotoolkit.org/ticket/9486)
+				// Won&#039;t change header if already provided in beforeSend
+				if ( ! ( s.crossDomain &amp;&amp; ! s.hasContent ) &amp;&amp; ! headers[&quot;x-requested-with&quot;] ) {
+					headers[&quot;x-requested-with&quot;] = &quot;XMLHttpRequest&quot;;
+				}
+				
+				// Need an extra try/catch for cross domain requests in Firefox 3
+				try {
+					
+					jQuery.each(headers, function(key,value) {
+						xhr.setRequestHeader(key,value);
+					});
+					
+				} catch(_) {}
+				
+				// Do send the request
+				try {
+					xhr.send( ( s.hasContent &amp;&amp; s.data ) || null );
+				} catch(e) {
+					complete(0, &quot;error&quot;, &quot;&quot; + e);
+					return;
+				}
+				
+				// Listener
+				callback = function ( abortStatusText ) {
+					
+					// Was never called and is aborted or complete
+					if ( callback &amp;&amp; ( abortStatusText || xhr.readyState === 4 ) ) {
+					
+						// Do not listen anymore
+						if (handle) {
+							xhr.onreadystatechange = jQuery.noop;
+							delete xhrs[ handle ];
+							handle = undefined;
+						}
+						
+						callback = 0;
+						
+						// Get info
+						var status, statusText, response, responseHeaders;
+							
+						if ( abortStatusText ) {
+							
+							if ( xhr.readyState !== 4 ) {
+								xhr.abort();
+							}
+							
+							// Stop here if unloadAbort
+							if ( abortStatusText === xhrUnloadAbortMarker ) {
+								return;
+							}
+							
+							status = 0;
+							statusText = abortStatusText;
+							
+						} else {
+							
+							status = xhr.status;
+							
+							try { // Firefox throws an exception when accessing statusText for faulty cross-domain requests
+								
+								statusText = xhr.statusText;
+								
+							} catch( e ) {
+								
+								statusText = &quot;&quot;; // We normalize with Webkit giving an empty statusText
+								
+							}
+							
+							responseHeaders = xhr.getAllResponseHeaders();
+							
+							// Filter status for non standard behaviours
+							// (so many they seem to be the actual &quot;standard&quot;)
+							status =
+								// Opera returns 0 when it should be 304
+								// Webkit returns 0 for failing cross-domain no matter the real status
+								status === 0 ?
+									(
+										! s.crossDomain || statusText ? // Webkit, Firefox: filter out faulty cross-domain requests
+										(
+											responseHeaders ? // Opera: filter out real aborts #6060
+											304
+											:
+											0
+										)
+										:
+										302 // We assume 302 but could be anything cross-domain related
+									)
+									:
+									(
+										status == 1223 ?	// IE sometimes returns 1223 when it should be 204 (see #1450)
+											204
+											:
+											status
+									);
+									
+							// Guess response if needed &amp; update datatype accordingly
+							if ( status &gt;= 200 &amp;&amp; status &lt; 300 ) {
+								response = 
+									determineDataType(
+										s,
+										xhr.getResponseHeader(&quot;content-type&quot;),
+										xhr.responseText,
+										xhr.responseXML );
+							}
+						}
+						
+						// Call complete
+						complete(status,statusText,response,responseHeaders);
+					}
+				};
+				
+				// if we&#039;re in sync mode
+				// or it&#039;s in cache and has been retrieved directly (IE6 &amp; IE7)
+				// we need to manually fire the callback
+				if ( ! s.async || xhr.readyState === 4 ) {
+					
+					callback();
+					
+				} else {
+					
+					// Listener is externalized to handle abort on unload
+					handle = xhrPollingId++;
+					xhrs[ handle ] = xhr;
+					xhr.onreadystatechange = function() {
+						callback();
+					};
+				}					
+			},
+			
+			abort: function(statusText) {
+				if ( callback ) {
+					callback(statusText);
+				}
+			}
+		};
+	}
+});
+
+// #5280: we need to abort on unload or IE will keep connections alive
+jQuery(window).bind( &quot;unload&quot; , function() {
+	
+	// Abort all pending requests
+	jQuery.each(xhrs, function(_, xhr) {
+		if ( xhr.onreadystatechange ) {
+			xhr.onreadystatechange( xhrUnloadAbortMarker );
+		}
+	});
+	
+	// Resest polling structure to be safe
+	xhrs = {};
+	
+});
+
+})( jQuery );</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

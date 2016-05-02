@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - event/event.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>event/event.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">65.71</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">467</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">78.81</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">3.92</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/*
+ * A number of helper functions used for managing events.
+ * Many of the ideas behind this code orignated from 
+ * Dean Edwards&#039; addEvent library.
+ */
+jQuery.event = {
+
+	// Bind an event to an element
+	// Original by Dean Edwards
+	add: function(element, type, handler, data) {
+		// For whatever reason, IE has trouble passing the window object
+		// around, causing it to be cloned in the process
+		if ( jQuery.browser.msie &amp;&amp; element.setInterval != undefined )
+			element = window;
+
+		// Make sure that the function being executed has a unique ID
+		if ( !handler.guid )
+			handler.guid = this.guid++;
+			
+		// if data is passed, bind to handler 
+		if( data != undefined ) { 
+        		// Create temporary function pointer to original handler 
+			var fn = handler; 
+
+			// Create unique handler function, wrapped around original handler 
+			handler = function() { 
+				// Pass arguments and context to original handler 
+				return fn.apply(this, arguments); 
+			};
+
+			// Store data in unique handler 
+			handler.data = data;
+
+			// Set the guid of unique handler to the same of original handler, so it can be removed 
+			handler.guid = fn.guid;
+		}
+
+		// Namespaced event handlers
+		var parts = type.split(&quot;.&quot;);
+		type = parts[0];
+		handler.type = parts[1];
+
+		// Init the element&#039;s event structure
+		if (!element.$events)
+			element.$events = {};
+		
+		if (!element.$handle)
+			element.$handle = function() {
+				// returned undefined or false
+				var val;
+
+				// Handle the second event of a trigger and when
+				// an event is called after a page has unloaded
+				if ( typeof jQuery == &quot;undefined&quot; || jQuery.event.triggered )
+				  return val;
+				
+				val = jQuery.event.handle.apply(element, arguments);
+				
+				return val;
+			};
+
+		// Get the current list of functions bound to this event
+		var handlers = element.$events[type];
+
+		// Init the event handler queue
+		if (!handlers) {
+			handlers = element.$events[type] = {};	
+			
+			// And bind the global event handler to the element
+			if (element.addEventListener)
+				element.addEventListener(type, element.$handle, false);
+			else
+				element.attachEvent(&quot;on&quot; + type, element.$handle);
+		}
+
+		// Add the function to the element&#039;s handler list
+		handlers[handler.guid] = handler;
+
+		// Keep track of which events have been used, for global triggering
+		this.global[type] = true;
+	},
+
+	guid: 1,
+	global: {},
+
+	// Detach an event or set of events from an element
+	remove: function(element, type, handler) {
+		var events = element.$events, ret, index;
+
+		// Namespaced event handlers
+		if ( typeof type == &quot;string&quot; ) {
+			var parts = type.split(&quot;.&quot;);
+			type = parts[0];
+		}
+
+		if ( events ) {
+			// type is actually an event object here
+			if ( type &amp;&amp; type.type ) {
+				handler = type.handler;
+				type = type.type;
+			}
+			
+			if ( !type ) {
+				for ( type in events )
+					this.remove( element, type );
+
+			} else if ( events[type] ) {
+				// remove the given handler for the given type
+				if ( handler )
+					delete events[type][handler.guid];
+				
+				// remove all handlers for the given type
+				else
+					for ( handler in element.$events[type] )
+						// Handle the removal of namespaced events
+						if ( !parts[1] || events[type][handler].type == parts[1] )
+							delete events[type][handler];
+
+				// remove generic event handler if no more handlers exist
+				for ( ret in events[type] ) break;
+				if ( !ret ) {
+					if (element.removeEventListener)
+						element.removeEventListener(type, element.$handle, false);
+					else
+						element.detachEvent(&quot;on&quot; + type, element.$handle);
+					ret = null;
+					delete events[type];
+				}
+			}
+
+			// Remove the expando if it&#039;s no longer used
+			for ( ret in events ) break;
+			if ( !ret )
+				element.$handle = element.$events = null;
+		}
+	},
+
+	trigger: function(type, data, element, donative, extra) {
+		// Clone the incoming data, if any
+		data = jQuery.makeArray(data || []);
+
+		// Handle a global trigger
+		if ( !element ) {
+			// Only trigger if we&#039;ve ever bound an event for it
+			if ( this.global[type] )
+				jQuery(&quot;*&quot;).add([window, document]).trigger(type, data);
+
+		// Handle triggering a single element
+		} else {
+			var val, ret, fn = jQuery.isFunction( element[ type ] || null ),
+				// Check to see if we need to provide a fake event, or not
+				evt = !data[0] || !data[0].preventDefault;
+			
+			// Pass along a fake event
+			if ( evt )
+				data.unshift( this.fix({ type: type, target: element }) );
+
+			// Trigger the event
+			if ( jQuery.isFunction( element.$handle ) )
+				val = element.$handle.apply( element, data );
+
+			// Handle triggering native .onfoo handlers
+			if ( !fn &amp;&amp; element[&quot;on&quot;+type] &amp;&amp; element[&quot;on&quot;+type].apply( element, data ) === false )
+				val = false;
+
+			// Extra functions don&#039;t get the custom event object
+			if ( evt )
+				data.shift();
+
+			// Handle triggering of extra function
+			if ( extra &amp;&amp; extra.apply( element, data ) === false )
+				val = false;
+
+			// Trigger the native events (except for clicks on links)
+			if ( fn &amp;&amp; donative !== false &amp;&amp; val !== false &amp;&amp; !(jQuery.nodeName(element, &#039;a&#039;) &amp;&amp; type == &quot;click&quot;) ) {
+				this.triggered = true;
+				element[ type ]();
+			}
+
+			this.triggered = false;
+		}
+
+		return val;
+	},
+
+	handle: function(event) {
+		// returned undefined or false
+		var val;
+
+		// Empty object is for triggered events with no data
+		event = jQuery.event.fix( event || window.event || {} ); 
+
+		// Namespaced event handlers
+		var parts = event.type.split(&quot;.&quot;);
+		event.type = parts[0];
+
+		var c = this.$events &amp;&amp; this.$events[event.type], args = Array.prototype.slice.call( arguments, 1 );
+		args.unshift( event );
+
+		for ( var j in c ) {
+			// Pass in a reference to the handler function itself
+			// So that we can later remove it
+			args[0].handler = c[j];
+			args[0].data = c[j].data;
+
+			// Filter the functions by class
+			if ( !parts[1] || c[j].type == parts[1] ) {
+				var tmp = c[j].apply( this, args );
+
+				if ( val !== false )
+					val = tmp;
+
+				if ( tmp === false ) {
+					event.preventDefault();
+					event.stopPropagation();
+				}
+			}
+		}
+
+		// Clean up added properties in IE to prevent memory leak
+		if (jQuery.browser.msie)
+			event.target = event.preventDefault = event.stopPropagation =
+				event.handler = event.data = null;
+
+		return val;
+	},
+
+	fix: function(event) {
+		// store a copy of the original event object 
+		// and clone to set read-only properties
+		var originalEvent = event;
+		event = jQuery.extend({}, originalEvent);
+		
+		// add preventDefault and stopPropagation since 
+		// they will not work on the clone
+		event.preventDefault = function() {
+			// if preventDefault exists run it on the original event
+			if (originalEvent.preventDefault)
+				originalEvent.preventDefault();
+			// otherwise set the returnValue property of the original event to false (IE)
+			originalEvent.returnValue = false;
+		};
+		event.stopPropagation = function() {
+			// if stopPropagation exists run it on the original event
+			if (originalEvent.stopPropagation)
+				originalEvent.stopPropagation();
+			// otherwise set the cancelBubble property of the original event to true (IE)
+			originalEvent.cancelBubble = true;
+		};
+		
+		// Fix target property, if necessary
+		if ( !event.target &amp;&amp; event.srcElement )
+			event.target = event.srcElement;
+				
+		// check if target is a textnode (safari)
+		if (jQuery.browser.safari &amp;&amp; event.target.nodeType == 3)
+			event.target = originalEvent.target.parentNode;
+
+		// Add relatedTarget, if necessary
+		if ( !event.relatedTarget &amp;&amp; event.fromElement )
+			event.relatedTarget = event.fromElement == event.target ? event.toElement : event.fromElement;
+
+		// Calculate pageX/Y if missing and clientX/Y available
+		if ( event.pageX == null &amp;&amp; event.clientX != null ) {
+			var e = document.documentElement, b = document.body;
+			event.pageX = event.clientX + (e &amp;&amp; e.scrollLeft || b.scrollLeft || 0);
+			event.pageY = event.clientY + (e &amp;&amp; e.scrollTop || b.scrollTop || 0);
+		}
+			
+		// Add which for key events
+		if ( !event.which &amp;&amp; (event.charCode || event.keyCode) )
+			event.which = event.charCode || event.keyCode;
+		
+		// Add metaKey to non-Mac browsers (use ctrl for PC&#039;s and Meta for Macs)
+		if ( !event.metaKey &amp;&amp; event.ctrlKey )
+			event.metaKey = event.ctrlKey;
+
+		// Add which for click: 1 == left; 2 == middle; 3 == right
+		// Note: button is not normalized, so don&#039;t use it
+		if ( !event.which &amp;&amp; event.button )
+			event.which = (event.button &amp; 1 ? 1 : ( event.button &amp; 2 ? 3 : ( event.button &amp; 4 ? 2 : 0 ) ));
+			
+		return event;
+	}
+};
+
+jQuery.fn.extend({
+	bind: function( type, data, fn ) {
+		return type == &quot;unload&quot; ? this.one(type, data, fn) : this.each(function(){
+			jQuery.event.add( this, type, fn || data, fn &amp;&amp; data );
+		});
+	},
+	
+	one: function( type, data, fn ) {
+		return this.each(function(){
+			jQuery.event.add( this, type, function(event) {
+				jQuery(this).unbind(event);
+				return (fn || data).apply( this, arguments);
+			}, fn &amp;&amp; data);
+		});
+	},
+
+	unbind: function( type, fn ) {
+		return this.each(function(){
+			jQuery.event.remove( this, type, fn );
+		});
+	},
+
+	trigger: function( type, data, fn ) {
+		return this.each(function(){
+			jQuery.event.trigger( type, data, this, true, fn );
+		});
+	},
+
+	triggerHandler: function( type, data, fn ) {
+		if ( this[0] )
+			return jQuery.event.trigger( type, data, this[0], false, fn );
+	},
+
+	toggle: function() {
+		// Save reference to arguments for access in closure
+		var a = arguments;
+
+		return this.click(function(e) {
+			// Figure out which function to execute
+			this.lastToggle = 0 == this.lastToggle ? 1 : 0;
+			
+			// Make sure that clicks stop
+			e.preventDefault();
+			
+			// and execute the function
+			return a[this.lastToggle].apply( this, [e] ) || false;
+		});
+	},
+
+	hover: function(f,g) {
+		
+		// A private function for handling mouse &#039;hovering&#039;
+		function handleHover(e) {
+			// Check if mouse(over|out) are still within the same parent element
+			var p = e.relatedTarget;
+	
+			// Traverse up the tree
+			while ( p &amp;&amp; p != this ) try { p = p.parentNode; } catch(e) { p = this; };
+			
+			// If we actually just moused on to a sub-element, ignore it
+			if ( p == this ) return false;
+			
+			// Execute the right function
+			return (e.type == &quot;mouseover&quot; ? f : g).apply(this, [e]);
+		}
+		
+		// Bind the function to the two event listeners
+		return this.mouseover(handleHover).mouseout(handleHover);
+	},
+	
+	ready: function(f) {
+		// Attach the listeners
+		bindReady();
+
+		// If the DOM is already ready
+		if ( jQuery.isReady )
+			// Execute the function immediately
+			f.apply( document, [jQuery] );
+			
+		// Otherwise, remember the function for later
+		else
+			// Add the function to the wait list
+			jQuery.readyList.push( function() { return f.apply(this, [jQuery]); } );
+	
+		return this;
+	}
+});
+
+jQuery.extend({
+	/*
+	 * All the code that makes DOM Ready work nicely.
+	 */
+	isReady: false,
+	readyList: [],
+	
+	// Handle when the DOM is ready
+	ready: function() {
+		// Make sure that the DOM is not already loaded
+		if ( !jQuery.isReady ) {
+			// Remember that the DOM is ready
+			jQuery.isReady = true;
+			
+			// If there are functions bound, to execute
+			if ( jQuery.readyList ) {
+				// Execute all of them
+				jQuery.each( jQuery.readyList, function(){
+					this.apply( document );
+				});
+				
+				// Reset the list of functions
+				jQuery.readyList = null;
+			}
+			// Remove event listener to avoid memory leak
+			if ( jQuery.browser.mozilla || jQuery.browser.opera )
+				document.removeEventListener( &quot;DOMContentLoaded&quot;, jQuery.ready, false );
+			
+			// Remove script element used by IE hack
+			if( !window.frames.length ) // don&#039;t remove if frames are present (#1187)
+				jQuery(window).load(function(){ jQuery(&quot;#__ie_init&quot;).remove(); });
+		}
+	}
+});
+
+
+jQuery.each( (&quot;blur,focus,load,resize,scroll,unload,click,dblclick,&quot; +
+	&quot;mousedown,mouseup,mousemove,mouseover,mouseout,change,select,&quot; + 
+	&quot;submit,keydown,keypress,keyup,error&quot;).split(&quot;,&quot;), function(i,o){
+	
+	// Handle event binding
+	jQuery.fn[o] = function(f){
+		return f ? this.bind(o, f) : this.trigger(o);
+	};
+});
+
+var readyBound = false;
+
+function bindReady(){
+	if ( readyBound ) return;
+	readyBound = true;
+
+	// If Mozilla is used
+	if ( jQuery.browser.mozilla || jQuery.browser.opera )
+		// Use the handy event callback
+		document.addEventListener( &quot;DOMContentLoaded&quot;, jQuery.ready, false );
+	
+	// If IE is used, use the excellent hack by Matthias Miller
+	// http://www.outofhanwell.com/blog/index.php?title=the_window_onload_problem_revisited
+	else if ( jQuery.browser.msie ) {
+	
+		// Only works if you document.write() it
+		document.write(&quot;&lt;scr&quot; + &quot;ipt id=__ie_init defer=true &quot; + 
+			&quot;src=//:&gt;&lt;\/script&gt;&quot;);
+	
+		// Use the defer script hack
+		var script = document.getElementById(&quot;__ie_init&quot;);
+		
+		// script does not exist if jQuery is loaded dynamically
+		if ( script ) 
+			script.onreadystatechange = function() {
+				if ( this.readyState != &quot;complete&quot; ) return;
+				jQuery.ready();
+			};
+	
+		// Clear from memory
+		script = null;
+	
+	// If Safari  is used
+	} else if ( jQuery.browser.safari )
+		// Continually check to see if the document.readyState is valid
+		jQuery.safariTimer = setInterval(function(){
+			// loaded and complete are both valid states
+			if ( document.readyState == &quot;loaded&quot; || 
+				document.readyState == &quot;complete&quot; ) {
+	
+				// If either one are found, remove the timer
+				clearInterval( jQuery.safariTimer );
+				jQuery.safariTimer = null;
+	
+				// and execute any waiting functions
+				jQuery.ready();
+			}
+		}, 10); 
+
+	// A fallback to window.onload, that will always work
+	jQuery.event.add( window, &quot;load&quot;, jQuery.ready );
+}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

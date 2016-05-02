@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - ajax/ajaxTest.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>ajax/ajaxTest.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">74.54</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">639</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">41.11</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">6.33</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">module(&quot;ajax&quot;);
+
+// Safari 3 randomly crashes when running these tests,
+// but only in the full suite - you can run just the Ajax
+// tests and they&#039;ll pass
+//if ( !jQuery.browser.safari ) {
+
+test(&quot;$.ajax() - success callbacks&quot;, function() {
+	expect( 8 );
+	
+	$.ajaxSetup({ timeout: 0 });
+	
+	stop();
+	
+	setTimeout(function(){	
+        $(&#039;#foo&#039;).ajaxStart(function(){
+            ok( true, &quot;ajaxStart&quot; );
+        }).ajaxStop(function(){
+            ok( true, &quot;ajaxStop&quot; );
+            start();
+        }).ajaxSend(function(){
+            ok( true, &quot;ajaxSend&quot; );
+        }).ajaxComplete(function(){
+            ok( true, &quot;ajaxComplete&quot; );
+        }).ajaxError(function(){
+            ok( false, &quot;ajaxError&quot; );
+        }).ajaxSuccess(function(){
+            ok( true, &quot;ajaxSuccess&quot; );
+        });
+        
+        $.ajax({
+            url: url(&quot;data/name.html&quot;),
+            beforeSend: function(){ ok(true, &quot;beforeSend&quot;); },
+            success: function(){ ok(true, &quot;success&quot;); },
+            error: function(){ ok(false, &quot;error&quot;); },
+            complete: function(){ ok(true, &quot;complete&quot;); }
+        });
+    }, 13);
+});
+
+if ( !isLocal ) {
+	test(&quot;$.ajax() - error callbacks&quot;, function() {
+		expect( 8 );
+		stop();
+		
+		$(&#039;#foo&#039;).ajaxStart(function(){
+			ok( true, &quot;ajaxStart&quot; );
+		}).ajaxStop(function(){
+			ok( true, &quot;ajaxStop&quot; );
+			start();
+		}).ajaxSend(function(){
+			ok( true, &quot;ajaxSend&quot; );
+		}).ajaxComplete(function(){
+			ok( true, &quot;ajaxComplete&quot; );
+		}).ajaxError(function(){
+			ok( true, &quot;ajaxError&quot; );
+		}).ajaxSuccess(function(){
+			ok( false, &quot;ajaxSuccess&quot; );
+		});
+		
+		$.ajaxSetup({ timeout: 500 });
+		
+		$.ajax({
+			url: url(&quot;data/name.php?wait=5&quot;),
+			beforeSend: function(){ ok(true, &quot;beforeSend&quot;); },
+			success: function(){ ok(false, &quot;success&quot;); },
+			error: function(){ ok(true, &quot;error&quot;); },
+			complete: function(){ ok(true, &quot;complete&quot;); }
+		});
+	});
+}
+
+test(&quot;$.ajax() - disabled globals&quot;, function() {
+	expect( 3 );
+	stop();
+	
+	$(&#039;#foo&#039;).ajaxStart(function(){
+		ok( false, &quot;ajaxStart&quot; );
+	}).ajaxStop(function(){
+		ok( false, &quot;ajaxStop&quot; );
+	}).ajaxSend(function(){
+		ok( false, &quot;ajaxSend&quot; );
+	}).ajaxComplete(function(){
+		ok( false, &quot;ajaxComplete&quot; );
+	}).ajaxError(function(){
+		ok( false, &quot;ajaxError&quot; );
+	}).ajaxSuccess(function(){
+		ok( false, &quot;ajaxSuccess&quot; );
+	});
+	
+	$.ajax({
+		global: false,
+		url: url(&quot;data/name.html&quot;),
+		beforeSend: function(){ ok(true, &quot;beforeSend&quot;); },
+		success: function(){ ok(true, &quot;success&quot;); },
+		error: function(){ ok(false, &quot;error&quot;); },
+		complete: function(){
+		  ok(true, &quot;complete&quot;);
+		  setTimeout(function(){ start(); }, 13);
+        }
+	});
+});
+
+test(&quot;$.ajax - xml: non-namespace elements inside namespaced elements&quot;, function() {
+	expect(3);
+	stop();
+	$.ajax({
+	  url: url(&quot;data/with_fries.xml&quot;),
+	  dataType: &quot;xml&quot;,
+	  success: function(resp) {
+	    equals( $(&quot;properties&quot;, resp).length, 1, &#039;properties in responseXML&#039; );
+	    equals( $(&quot;jsconf&quot;, resp).length, 1, &#039;jsconf in responseXML&#039; );
+	    equals( $(&quot;thing&quot;, resp).length, 2, &#039;things in responseXML&#039; );
+	    start();
+	  }
+	});
+});
+
+test(&quot;$.ajax - beforeSend&quot;, function() {
+	expect(1);
+	stop();
+	
+	var check = false;
+	
+	$.ajaxSetup({ timeout: 0 });
+	
+	$.ajax({
+		url: url(&quot;data/name.html&quot;), 
+		beforeSend: function(xml) {
+			check = true;
+		},
+		success: function(data) {
+			ok( check, &quot;check beforeSend was executed&quot; );
+			start();
+		}
+	});
+});
+
+var foobar;
+
+test(&quot;$.ajax - dataType html&quot;, function() {
+	expect(5);
+	stop();
+	
+	foobar = null;
+	testFoo = undefined;
+
+	var verifyEvaluation = function() {
+	  ok( testFoo == &quot;foo&quot;, &#039;Check if script was evaluated for datatype html&#039; );
+	  ok( foobar == &quot;bar&quot;, &#039;Check if script src was evaluated for datatype html&#039; );
+	  start();
+	};
+
+	$.ajax({
+	  dataType: &quot;html&quot;,
+	  url: url(&quot;data/test.html&quot;),
+	  success: function(data) {
+	  	$(&quot;#ap&quot;).html(data);
+	    ok( data.match(/^html text/), &#039;Check content for datatype html&#039; );
+	    setTimeout(verifyEvaluation, 600);
+	  }
+	});
+});
+
+test(&quot;serialize()&quot;, function() {
+	expect(6);
+	
+	equals( $(&#039;#form&#039;).serialize(),
+		&quot;action=Test&amp;radio2=on&amp;check=on&amp;hidden=&amp;foo%5Bbar%5D=&amp;name=name&amp;select1=&amp;select2=3&amp;select3=0&amp;select3=1&quot;,
+		&#039;Check form serialization as query string&#039;);
+		
+	equals( $(&#039;#form :input&#039;).serialize(),
+		&quot;action=Test&amp;radio2=on&amp;check=on&amp;hidden=&amp;foo%5Bbar%5D=&amp;name=name&amp;select1=&amp;select2=3&amp;select3=0&amp;select3=1&quot;,
+		&#039;Check input serialization as query string&#039;);
+	
+	equals( $(&#039;#testForm&#039;).serialize(), 
+		&#039;T3=%3F%0AZ&amp;H1=x&amp;H2=&amp;PWD=&amp;T1=&amp;T2=YES&amp;My+Name=me&amp;S1=abc&amp;S3=YES&amp;S4=&#039;, 
+		&#039;Check form serialization as query string&#039;);
+		
+	equals( $(&#039;#testForm :input&#039;).serialize(), 
+		&#039;T3=%3F%0AZ&amp;H1=x&amp;H2=&amp;PWD=&amp;T1=&amp;T2=YES&amp;My+Name=me&amp;S1=abc&amp;S3=YES&amp;S4=&#039;, 
+		&#039;Check input serialization as query string&#039;);
+		
+	equals( $(&#039;#form, #testForm&#039;).serialize(),
+		&quot;action=Test&amp;radio2=on&amp;check=on&amp;hidden=&amp;foo%5Bbar%5D=&amp;name=name&amp;select1=&amp;select2=3&amp;select3=0&amp;select3=1&amp;T3=%3F%0AZ&amp;H1=x&amp;H2=&amp;PWD=&amp;T1=&amp;T2=YES&amp;My+Name=me&amp;S1=abc&amp;S3=YES&amp;S4=&quot;,
+		&#039;Multiple form serialization as query string&#039;);
+		
+	equals( $(&#039;#form, #testForm :input&#039;).serialize(),
+		&quot;action=Test&amp;radio2=on&amp;check=on&amp;hidden=&amp;foo%5Bbar%5D=&amp;name=name&amp;select1=&amp;select2=3&amp;select3=0&amp;select3=1&amp;T3=%3F%0AZ&amp;H1=x&amp;H2=&amp;PWD=&amp;T1=&amp;T2=YES&amp;My+Name=me&amp;S1=abc&amp;S3=YES&amp;S4=&quot;,
+		&#039;Mixed form/input serialization as query string&#039;);
+});
+
+test(&quot;$.param()&quot;, function() {
+	expect(4);
+	var params = {foo:&quot;bar&quot;, baz:42, quux:&quot;All your base are belong to us&quot;};
+	equals( $.param(params), &quot;foo=bar&amp;baz=42&amp;quux=All+your+base+are+belong+to+us&quot;, &quot;simple&quot; );
+	
+	params = {someName: [1, 2, 3], regularThing: &quot;blah&quot; };
+	equals( $.param(params), &quot;someName=1&amp;someName=2&amp;someName=3&amp;regularThing=blah&quot;, &quot;with array&quot; );
+	
+	params = {&quot;foo[]&quot;:[&quot;baz&quot;, 42, &quot;All your base are belong to us&quot;]};
+	equals( $.param(params), &quot;foo%5B%5D=baz&amp;foo%5B%5D=42&amp;foo%5B%5D=All+your+base+are+belong+to+us&quot;, &quot;more array&quot; );
+	
+	params = {&quot;foo[bar]&quot;:&quot;baz&quot;, &quot;foo[beep]&quot;:42, &quot;foo[quux]&quot;:&quot;All your base are belong to us&quot;};
+	equals( $.param(params), &quot;foo%5Bbar%5D=baz&amp;foo%5Bbeep%5D=42&amp;foo%5Bquux%5D=All+your+base+are+belong+to+us&quot;, &quot;even more arrays&quot; );
+});
+
+test(&quot;synchronous request&quot;, function() {
+	expect(1);
+	ok( /^{ &quot;data&quot;/.test( $.ajax({url: url(&quot;data/json_obj.js&quot;), async: false}).responseText ), &quot;check returned text&quot; );
+});
+
+test(&quot;synchronous request with callbacks&quot;, function() {
+	expect(2);
+	var result;
+	$.ajax({url: url(&quot;data/json_obj.js&quot;), async: false, success: function(data) { ok(true, &quot;sucess callback executed&quot;); result = data; } });
+	ok( /^{ &quot;data&quot;/.test( result ), &quot;check returned text&quot; );
+});
+
+test(&quot;pass-through request object&quot;, function() {
+	expect(1);
+	stop(true);
+	
+	var target = &quot;data/name.html&quot;;
+	var count = 0;
+	var success = function() {
+		// Disabled
+		//if(count++ == 5)
+		start();
+	};
+	
+	/* Test disabled, too many simultaneous requests
+	ok( $.get(url(target), success), &quot;get&quot; );
+	ok( $.post(url(target), success), &quot;post&quot; );
+	ok( $.getScript(url(&quot;data/test.js&quot;), success), &quot;script&quot; );
+	ok( $.getJSON(url(&quot;data/json_obj.js&quot;), success), &quot;json&quot; );
+	*/
+	ok( $.ajax({url: url(target), success: success}), &quot;generic&quot; );
+});
+
+test(&quot;global ajaxSettings&quot;, function() {
+	expect(3);
+
+	var tmp = jQuery.extend({}, jQuery.ajaxSettings);
+    var orig = { url: &quot;data/with_fries.xml&quot;, data: null };
+	var t;
+
+	$.ajaxSetup({ data: {foo: &#039;bar&#039;, bar: &#039;BAR&#039;} });
+
+    t = jQuery.extend({}, orig);
+    $.ajax(t);
+	ok( t.url.indexOf(&#039;foo&#039;) &gt; -1 &amp;&amp; t.url.indexOf(&#039;bar&#039;) &gt; -1, &quot;Check extending null&quot; );
+
+    t = jQuery.extend({}, orig);
+	t.data = {};
+    $.ajax(t);
+	ok( t.url.indexOf(&#039;foo&#039;) &gt; -1 &amp;&amp; t.url.indexOf(&#039;bar&#039;) &gt; -1, &quot;Check extending {}&quot; );
+
+    t = jQuery.extend({}, orig);
+	t.data = { zoo: &#039;a&#039;, ping: &#039;b&#039; };
+    $.ajax(t);
+	ok( t.url.indexOf(&#039;ping&#039;) &gt; -1 &amp;&amp; t.url.indexOf(&#039;zoo&#039;) &gt; -1 &amp;&amp; t.url.indexOf(&#039;foo&#039;) &gt; -1 &amp;&amp; t.url.indexOf(&#039;bar&#039;) &gt; -1, &quot;Check extending { zoo: &#039;a&#039;, ping: &#039;b&#039; }&quot; );
+	
+	jQuery.ajaxSettings = tmp;
+});
+
+test(&quot;load(String)&quot;, function() {
+	expect(1);
+	stop(true); // check if load can be called with only url
+	$(&#039;#first&#039;).load(&quot;data/name.html&quot;, start);
+});
+
+test(&quot;load(&#039;url selector&#039;)&quot;, function() {
+	expect(1);
+	stop(true); // check if load can be called with only url
+	$(&#039;#first&#039;).load(&quot;data/test3.html div.user&quot;, function(){
+		equals( $(this).children(&quot;div&quot;).length, 2, &quot;Verify that specific elements were injected&quot; );
+		start();
+	});
+});
+
+test(&quot;load(String, Function) - simple: inject text into DOM&quot;, function() {
+	expect(2);
+	stop();
+	$(&#039;#first&#039;).load(url(&quot;data/name.html&quot;), function() {
+		ok( /^ERROR/.test($(&#039;#first&#039;).text()), &#039;Check if content was injected into the DOM&#039; );
+		start();
+	});
+});
+
+test(&quot;load(String, Function) - check scripts&quot;, function() {
+	expect(7);
+	stop();
+	window.testFoo = undefined;
+	window.foobar = null;
+	var verifyEvaluation = function() {
+	  equals( foobar, &quot;bar&quot;, &#039;Check if script src was evaluated after load&#039; );
+	  equals( $(&#039;#ap&#039;).html(), &#039;bar&#039;, &#039;Check if script evaluation has modified DOM&#039;);
+	  start();
+	};
+	$(&#039;#first&#039;).load(url(&#039;data/test.html&#039;), function() {
+	  ok( $(&#039;#first&#039;).html().match(/^html text/), &#039;Check content after loading html&#039; );
+	  equals( $(&#039;#foo&#039;).html(), &#039;foo&#039;, &#039;Check if script evaluation has modified DOM&#039;);
+	  equals( testFoo, &quot;foo&quot;, &#039;Check if script was evaluated after load&#039; );
+	  setTimeout(verifyEvaluation, 600);
+	});
+});
+
+test(&quot;load(String, Function) - check file with only a script tag&quot;, function() {
+	expect(3);
+	stop();
+	testFoo = undefined;
+	$(&#039;#first&#039;).load(url(&#039;data/test2.html&#039;), function() {
+	  ok( $(&#039;#foo&#039;).html() == &#039;foo&#039;, &#039;Check if script evaluation has modified DOM&#039;);
+	  ok( testFoo == &quot;foo&quot;, &#039;Check if script was evaluated after load&#039; );
+	  start();
+	});
+});
+
+test(&quot;$.get(String, Hash, Function) - parse xml and use text() on nodes&quot;, function() {
+	expect(2);
+	stop();
+	$.get(url(&#039;data/dashboard.xml&#039;), function(xml) {
+		var content = [];
+		$(&#039;tab&#039;, xml).each(function() {
+			content.push($(this).text());
+		});
+		equals( content[0], &#039;blabla&#039;, &#039;Check first tab&#039;);
+		equals( content[1], &#039;blublu&#039;, &#039;Check second tab&#039;);
+		start();
+	});
+});
+
+test(&quot;$.getScript(String, Function) - with callback&quot;, function() {
+	expect(2);
+	stop();
+	$.getScript(url(&quot;data/test.js&quot;), function() {
+		equals( foobar, &quot;bar&quot;, &#039;Check if script was evaluated&#039; );
+		setTimeout(start, 100);
+	});
+});
+
+test(&quot;$.getScript(String, Function) - no callback&quot;, function() {
+	expect(1);
+	stop(true);
+	$.getScript(url(&quot;data/test.js&quot;), start);
+});
+
+if ( !isLocal ) {
+
+test(&quot;$.ajax() - JSONP, Local&quot;, function() {
+	expect(7);
+
+	var count = 0;
+	function plus(){ if ( ++count == 7 ) start(); }
+
+	stop();
+
+	$.ajax({
+		url: &quot;data/jsonp.php&quot;,
+		dataType: &quot;jsonp&quot;,
+		success: function(data){
+			ok( data.data, &quot;JSON results returned (GET, no callback)&quot; );
+			plus();
+		}
+	});
+
+	$.ajax({
+		url: &quot;data/jsonp.php?callback=?&quot;,
+		dataType: &quot;jsonp&quot;,
+		success: function(data){
+			ok( data.data, &quot;JSON results returned (GET, url callback)&quot; );
+			plus();
+		}
+	});
+
+	$.ajax({
+		url: &quot;data/jsonp.php&quot;,
+		dataType: &quot;jsonp&quot;,
+		data: &quot;callback=?&quot;,
+		success: function(data){
+			ok( data.data, &quot;JSON results returned (GET, data callback)&quot; );
+			plus();
+		}
+	});
+
+	$.ajax({
+		url: &quot;data/jsonp.php&quot;,
+		dataType: &quot;jsonp&quot;,
+		data: { callback: &quot;?&quot; },
+		success: function(data){
+			ok( data.data, &quot;JSON results returned (GET, data obj callback)&quot; );
+			plus();
+		}
+	});
+
+	$.ajax({
+		type: &quot;POST&quot;,
+		url: &quot;data/jsonp.php&quot;,
+		dataType: &quot;jsonp&quot;,
+		success: function(data){
+			ok( data.data, &quot;JSON results returned (POST, no callback)&quot; );
+			plus();
+		}
+	});
+
+	$.ajax({
+		type: &quot;POST&quot;,
+		url: &quot;data/jsonp.php&quot;,
+		data: &quot;callback=?&quot;,
+		dataType: &quot;jsonp&quot;,
+		success: function(data){
+			ok( data.data, &quot;JSON results returned (POST, data callback)&quot; );
+			plus();
+		}
+	});
+
+	$.ajax({
+		type: &quot;POST&quot;,
+		url: &quot;data/jsonp.php&quot;,
+		data: { callback: &quot;?&quot; },
+		dataType: &quot;jsonp&quot;,
+		success: function(data){
+			ok( data.data, &quot;JSON results returned (POST, data obj callback)&quot; );
+			plus();
+		}
+	});
+});
+
+test(&quot;$.ajax() - JSONP, Remote&quot;, function() {
+	expect(4);
+
+	var count = 0;
+	function plus(){ if ( ++count == 4 ) start(); }
+
+	var base = window.location.href.replace(/\?.*$/, &quot;&quot;);
+
+	stop();
+
+	$.ajax({
+		url: base + &quot;data/jsonp.php&quot;,
+		dataType: &quot;jsonp&quot;,
+		success: function(data){
+			ok( data.data, &quot;JSON results returned (GET, no callback)&quot; );
+			plus();
+		}
+	});
+
+	$.ajax({
+		url: base + &quot;data/jsonp.php?callback=?&quot;,
+		dataType: &quot;jsonp&quot;,
+		success: function(data){
+			ok( data.data, &quot;JSON results returned (GET, url callback)&quot; );
+			plus();
+		}
+	});
+
+	$.ajax({
+		url: base + &quot;data/jsonp.php&quot;,
+		dataType: &quot;jsonp&quot;,
+		data: &quot;callback=?&quot;,
+		success: function(data){
+			ok( data.data, &quot;JSON results returned (GET, data callback)&quot; );
+			plus();
+		}
+	});
+
+	$.ajax({
+		url: base + &quot;data/jsonp.php&quot;,
+		dataType: &quot;jsonp&quot;,
+		data: { callback: &quot;?&quot; },
+		success: function(data){
+			ok( data.data, &quot;JSON results returned (GET, data obj callback)&quot; );
+			plus();
+		}
+	});
+});
+
+test(&quot;$.ajax() - script, Remote&quot;, function() {
+	expect(2);
+
+	var base = window.location.href.replace(/\?.*$/, &quot;&quot;);
+
+	stop();
+
+	$.ajax({
+		url: base + &quot;data/test.js&quot;,
+		dataType: &quot;script&quot;,
+		success: function(data){
+			ok( foobar, &quot;Script results returned (GET, no callback)&quot; );
+			start();
+		}
+	});
+});
+
+test(&quot;$.getJSON(String, Hash, Function) - JSON array&quot;, function() {
+	expect(4);
+	stop();
+	$.getJSON(url(&quot;data/json.php&quot;), {json: &quot;array&quot;}, function(json) {
+	  ok( json[0].name == &#039;John&#039;, &#039;Check JSON: first, name&#039; );
+	  ok( json[0].age == 21, &#039;Check JSON: first, age&#039; );
+	  ok( json[1].name == &#039;Peter&#039;, &#039;Check JSON: second, name&#039; );
+	  ok( json[1].age == 25, &#039;Check JSON: second, age&#039; );
+	  start();
+	});
+});
+
+test(&quot;$.getJSON(String, Function) - JSON object&quot;, function() {
+	expect(2);
+	stop();
+	$.getJSON(url(&quot;data/json.php&quot;), function(json) {
+	  ok( json.data.lang == &#039;en&#039;, &#039;Check JSON: lang&#039; );
+	  ok( json.data.length == 25, &#039;Check JSON: length&#039; );
+	  start();
+	});
+});
+
+test(&quot;$.post(String, Hash, Function) - simple with xml&quot;, function() {
+	expect(2);
+	stop();
+	$.post(url(&quot;data/name.php&quot;), {xml: &quot;5-2&quot;}, function(xml){
+	  $(&#039;math&#039;, xml).each(function() {
+		    ok( $(&#039;calculation&#039;, this).text() == &#039;5-2&#039;, &#039;Check for XML&#039; );
+		    ok( $(&#039;result&#039;, this).text() == &#039;3&#039;, &#039;Check for XML&#039; );
+		 });
+	  start();
+	});
+});
+
+test(&quot;$.ajaxSetup({timeout: Number}) - with global timeout&quot;, function() {
+	stop();
+	
+	var passed = 0;
+
+	$.ajaxSetup({timeout: 1000});
+	
+	var pass = function() {
+		passed++;
+		if ( passed == 2 ) {
+			ok( true, &#039;Check local and global callbacks after timeout&#039; );
+	     	$(&#039;#main&#039;).unbind(&quot;ajaxError&quot;);
+			start();
+		}
+	};
+	
+	var fail = function(a,b,c) {
+		ok( false, &#039;Check for timeout failed &#039; + a + &#039; &#039; + b );
+		start();
+	};
+	
+	$(&#039;#main&#039;).ajaxError(pass);
+	
+	$.ajax({
+	  type: &quot;GET&quot;,
+	  url: url(&quot;data/name.php?wait=5&quot;),
+	  error: pass,
+	  success: fail
+	});
+	
+	// reset timeout
+	$.ajaxSetup({timeout: 0});
+});
+
+test(&quot;$.ajaxSetup({timeout: Number}) with localtimeout&quot;, function() {
+	stop();
+	$.ajaxSetup({timeout: 50});
+
+	$.ajax({
+	  type: &quot;GET&quot;,
+	  timeout: 5000,
+	  url: url(&quot;data/name.php?wait=1&quot;),
+	  error: function() {
+		   ok( false, &#039;Check for local timeout failed&#039; );
+		   start();
+	  },
+	  success: function() {
+	    ok( true, &#039;Check for local timeout&#039; );
+	    start();
+	  }
+	});
+
+	// reset timeout
+	$.ajaxSetup({timeout: 0});
+});
+
+test(&quot;$.ajax - simple get&quot;, function() {
+	expect(1);
+	stop();
+	$.ajax({
+	  type: &quot;GET&quot;,
+	  url: url(&quot;data/name.php?name=foo&quot;),
+	  success: function(msg){
+	    ok( msg == &#039;bar&#039;, &#039;Check for GET&#039; );
+	    start();
+	  }
+	});
+});
+
+test(&quot;$.ajax - simple post&quot;, function() {
+	expect(1);
+	stop();
+	$.ajax({
+	  type: &quot;POST&quot;,
+	  url: url(&quot;data/name.php&quot;),
+	  data: &quot;name=peter&quot;,
+	  success: function(msg){
+	    ok( msg == &#039;pan&#039;, &#039;Check for POST&#039; );
+	    start();
+	  }
+	});
+});
+
+test(&quot;ajaxSetup()&quot;, function() {
+	expect(1);
+	stop();
+	$.ajaxSetup({
+		url: url(&quot;data/name.php?name=foo&quot;),
+		success: function(msg){
+	    	ok( msg == &#039;bar&#039;, &#039;Check for GET&#039; );
+			start();
+		}
+	});
+	$.ajax();
+});
+
+test(&quot;custom timeout does not set error message when timeout occurs, see #970&quot;, function() {
+	stop();
+	$.ajax({
+		url: &quot;data/name.php?wait=10&quot;,
+		timeout: 500,
+		error: function(request, status) {
+			ok( status != null, &quot;status shouldn&#039;t be null in error handler&quot; );
+			equals( &quot;timeout&quot;, status );
+			start();
+		}
+	});
+});
+
+}
+
+//}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - xhr.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>xhr.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">53.95</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">740</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">88.72</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">4.98</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">(function( jQuery ) {
+
+var rquery_xhr = /\?/,
+	rhash = /#.*$/,
+	rheaders = /^(.*?):\s*(.*?)\r?$/mg, // IE leaves an \r character at EOL
+	rnoContent = /^(?:GET|HEAD)$/,
+	rts = /([?&amp;])_=[^&amp;]*/,
+	rurl = /^(\w+:)?\/\/([^\/?#]+)/,
+	
+	sliceFunc = Array.prototype.slice;
+	
+// Creates a jQuery xhr object
+jQuery.xhr = function( _native ) {
+
+	if ( _native ) {
+		return jQuery.ajaxSettings.xhr();
+	}
+	
+	function reset( force ) {
+		
+		// We only need to reset if we went through the init phase
+		// (with the exception of object creation)
+		if ( force || internal ) {
+			
+			// Reset callbacks lists
+			deferred = jQuery.deferred();
+			completeDeferred = jQuery._deferred();
+			
+			xhr.success = xhr.then = deferred.then;
+			xhr.error = xhr.fail = deferred.fail;
+			xhr.complete = completeDeferred.then;
+			
+			// Reset private variables
+			requestHeaders = {};
+			responseHeadersString = responseHeaders = internal = done = timeoutTimer = s = undefined;
+
+			// Reset state
+			xhr.readyState = 0;
+			sendFlag = 0;
+
+			// Remove responseX fields
+			for ( var name in xhr ) {
+				if ( /^response/.test(name) ) {
+					delete xhr[name];
+				}
+			}
+		}
+	}
+
+	function init() {
+
+		var // Options extraction
+
+			// Remove hash character (#7531: first for string promotion)
+			url = s.url = ( &quot;&quot; + s.url ).replace( rhash , &quot;&quot; ),
+
+			// Uppercase the type
+			type = s.type = s.type.toUpperCase(),
+
+			// Determine if request has content
+			hasContent = s.hasContent = ! rnoContent.test( type ),
+
+			// Extract dataTypes list
+			dataType = s.dataType,
+			dataTypes = s.dataTypes = dataType ? jQuery.trim(dataType).toLowerCase().split(/\s+/) : [&quot;*&quot;],
+
+			// Determine if a cross-domain request is in order
+			parts = rurl.exec( url.toLowerCase() ),
+			loc = location,
+			crossDomain = s.crossDomain = !!( parts &amp;&amp; ( parts[1] &amp;&amp; parts[1] != loc.protocol || parts[2] != loc.host ) ),
+
+			// Get other options locally
+			data = s.data,
+			originalContentType = s.contentType,
+			prefilters = s.prefilters,
+			accepts = s.accepts,
+			headers = s.headers,
+
+			// Other Variables
+			transportDataType,
+			i;
+
+		// Convert data if not already a string
+		if ( data &amp;&amp; s.processData &amp;&amp; typeof data != &quot;string&quot; ) {
+			data = s.data = jQuery.param( data , s.traditional );
+		}
+
+		// Get internal
+		internal = jQuery.xhr.prefilter( s ).transport( s );
+		
+		// Re-actualize url &amp; data
+		url = s.url;
+		data = s.data;
+
+		// If internal was found
+		if ( internal ) {
+
+			// Get transportDataType
+			transportDataType = dataTypes[0];
+
+			// More options handling for requests with no content
+			if ( ! hasContent ) {
+
+				// If data is available, append data to url
+				if ( data ) {
+					url += (rquery_xhr.test(url) ? &quot;&amp;&quot; : &quot;?&quot;) + data;
+				}
+
+				// Add anti-cache in url if needed
+				if ( s.cache === false ) {
+
+					var ts = jQuery.now(),
+						// try replacing _= if it is there
+						ret = url.replace(rts, &quot;$1_=&quot; + ts );
+
+					// if nothing was replaced, add timestamp to the end
+					url = ret + ((ret == url) ? (rquery_xhr.test(url) ? &quot;&amp;&quot; : &quot;?&quot;) + &quot;_=&quot; + ts : &quot;&quot;);
+				}
+
+				s.url = url;
+			}
+
+			// Set the correct header, if data is being sent
+			if ( ( data &amp;&amp; hasContent ) || originalContentType ) {
+				requestHeaders[&quot;content-type&quot;] = s.contentType;
+			}
+
+			// Set the If-Modified-Since and/or If-None-Match header, if in ifModified mode.
+			if ( s.ifModified ) {
+				if ( jQuery_lastModified[url] ) {
+					requestHeaders[&quot;if-modified-since&quot;] = jQuery_lastModified[url];
+				}
+				if ( jQuery_etag[url] ) {
+					requestHeaders[&quot;if-none-match&quot;] = jQuery_etag[url];
+				}
+			}
+
+			// Set the Accepts header for the server, depending on the dataType
+			requestHeaders.accept = transportDataType &amp;&amp; accepts[ transportDataType ] ?
+				accepts[ transportDataType ] + ( transportDataType !== &quot;*&quot; ? &quot;, */*; q=0.01&quot; : &quot;&quot; ) :
+				accepts[ &quot;*&quot; ];
+
+			// Check for headers option
+			for ( i in headers ) {
+				requestHeaders[ i.toLowerCase() ] = headers[ i ];
+			}
+		}
+		
+		callbackContext = s.context || s;
+		globalEventContext = s.context ? jQuery(s.context) : jQuery.event;
+		
+		for ( i in { success:1, error:1, complete:1 } ) {
+			xhr[ i ]( s[ i ] );
+		}
+
+		// Watch for a new set of requests
+		if ( s.global &amp;&amp; jQuery.active++ === 0 ) {
+			jQuery.event.trigger( &quot;ajaxStart&quot; );
+		}
+
+		done = whenDone;
+	}
+
+	function whenDone(status, statusText, response, headers) {
+
+		// Called once
+		done = undefined;
+
+		// Reset sendFlag
+		sendFlag = 0;
+
+		// Cache response headers
+		responseHeadersString = headers || &quot;&quot;;
+
+		// Clear timeout if it exists
+		if ( timeoutTimer ) {
+			clearTimeout(timeoutTimer);
+		}
+
+		var // Reference url
+			url = s.url,
+			// and ifModified status
+			ifModified = s.ifModified,
+
+			// Is it a success?
+			isSuccess = 0,
+			// Stored success
+			success,
+			// Stored error
+			error = statusText;
+
+		// If not timeout, force a jQuery-compliant status text
+		if ( statusText != &quot;timeout&quot; ) {
+			statusText = ( status &gt;= 200 &amp;&amp; status &lt; 300 ) ?
+				&quot;success&quot; :
+				( status === 304 ? &quot;notmodified&quot; : &quot;error&quot; );
+		}
+
+		// If successful, handle type chaining
+		if ( statusText === &quot;success&quot; || statusText === &quot;notmodified&quot; ) {
+
+			// Set the If-Modified-Since and/or If-None-Match header, if in ifModified mode.
+			if ( ifModified ) {
+				var lastModified = xhr.getResponseHeader(&quot;Last-Modified&quot;),
+					etag = xhr.getResponseHeader(&quot;Etag&quot;);
+
+				if (lastModified) {
+					jQuery_lastModified[url] = lastModified;
+				}
+				if (etag) {
+					jQuery_etag[url] = etag;
+				}
+			}
+
+			if ( ifModified &amp;&amp; statusText === &quot;notmodified&quot; ) {
+
+				success = null;
+				isSuccess = 1;
+
+			} else {
+				// Chain data conversions and determine the final value
+				// (if an exception is thrown in the process, it&#039;ll be notified as an error)
+				try {
+					
+					var i,
+						current,
+						prev,
+						checker,
+						conv1,
+						conv2,
+						oneConv,
+						convertion,
+						dataTypes = s.dataTypes,
+						dataCheckers = s.dataCheckers,
+						dataConverters = s.dataConverters,
+						dataFilter = s.dataFilter,
+						responses = {
+							&quot;xml&quot;: &quot;XML&quot;,
+							&quot;text&quot;: &quot;Text&quot;
+						};
+					
+					for( i = 0 ; i &lt; dataTypes.length ; i++ ) {
+						
+						current = dataTypes[ i ];
+						
+						if ( i ) {
+							
+							prev = dataTypes[ i - 1 ];
+							
+							if ( prev === &quot;*&quot; ) {
+								
+								prev = current;
+								
+							} else if ( current !== &quot;*&quot; &amp;&amp; prev !== current ) {
+							
+								oneConv = conv1 = 
+									dataConverters[ ( conversion = prev + &quot; =&gt; &quot; + current ) ] ||
+									dataConverters[ &quot;* =&gt; &quot; + current ];
+								
+								if ( ! oneConv &amp;&amp; prev !== &quot;text&quot; &amp;&amp; current !== &quot;text&quot; ) {
+									conv1 = dataConverters[ prev + &quot; =&gt; text&quot; ] || dataConverters[ &quot;* =&gt; text&quot; ];
+									conv2 = dataConverters[ &quot;text =&gt; &quot; + current ];
+								}
+								if ( oneConv || conv1 &amp;&amp; conv2 ) {
+									response = oneConv ? conv1( response ) : conv2( conv1( response ) );
+								} else {
+									throw &quot;no &quot; + conversion;
+								}
+							}
+						}
+						
+						checker = dataCheckers[ current ];
+						
+						if ( response != null &amp;&amp; checker ) {
+							checker( response );
+						}
+						
+						if ( responses[ current ] ) {
+							xhr[ &quot;response&quot; + responses[ current ] ] = response;
+							responses[ current ] = 0;
+						}
+						
+						if ( ! i &amp;&amp; dataFilter ) {
+							
+							response = dataFilter( response );
+							
+							dataTypes = s.dataTypes;
+							dataFilter = 0;
+							i--;
+						}
+					}
+
+					// We have a real success
+					success = response;
+					isSuccess = 1;
+
+				} catch(e) {
+
+					statusText = &quot;parsererror&quot;;
+					error = &quot;&quot; + e;
+
+				}
+			}
+
+		} else { // if not success, mark it as an error
+
+				error = error || statusText;
+
+		}
+
+		// Set data for the fake xhr object
+		xhr.status = status;
+		xhr.statusText = statusText;
+
+		// Keep local copies of vars in case callbacks re-use the xhr
+		var _s = s,
+			_deferred = deferred,
+			_completeDeferred = completeDeferred,
+			_callbackContext = callbackContext,
+			_globalEventContext = globalEventContext;
+			
+			
+		// Set state if the xhr hasn&#039;t been re-used
+		function _setState( value ) {
+			if ( xhr.readyState &amp;&amp; s === _s ) {
+				setState( value );
+			}
+		}
+
+		// Really completed?
+		if ( status &amp;&amp; s.async ) {
+			setState( 2 );
+			_setState( 3 );
+		}
+
+		// We&#039;re done
+		_setState( 4 );
+		
+		// Success/Error
+		if ( isSuccess ) {
+			_deferred.fire( _callbackContext , [ success , statusText , xhr ] );
+		} else {
+			_deferred.fireReject( _callbackContext , [ xhr , statusText , error ] );
+		}
+		
+		if ( _s.global ) {
+			_globalEventContext.trigger( &quot;ajax&quot; + ( isSuccess ? &quot;Success&quot; : &quot;Error&quot; ) , [ xhr , _s , isSuccess ? success : error ] );
+		}
+		
+		// Complete
+		_completeDeferred.fire( _callbackContext, [ xhr , statusText ] );
+		
+		if ( _s.global ) {
+			_globalEventContext.trigger( &quot;ajaxComplete&quot;, [xhr, _s] );
+			// Handle the global AJAX counter
+			if ( ! --jQuery.active ) {
+				jQuery.event.trigger( &quot;ajaxStop&quot; );
+			}
+		}
+	}
+
+	// Ready state control
+	function checkState( expected , test ) {
+		if ( expected !== true &amp;&amp; ( expected === false || test === false || xhr.readyState !== expected ) ) {
+			jQuery.error(&quot;INVALID_STATE_ERR&quot;);
+		}
+	}
+
+	// Ready state change
+	function setState( value ) {
+		xhr.readyState = value;
+		if ( jQuery.isFunction( xhr.onreadystatechange ) ) {
+			xhr.onreadystatechange();
+		}
+	}
+
+	var // jQuery lists
+		jQuery_lastModified = jQuery.lastModified,
+		jQuery_etag = jQuery.etag,
+		// Options object
+		s,
+		// Callback stuff
+		callbackContext,
+		globalEventContext,
+		deferred,
+		completeDeferred,
+		// Headers (they are sent all at once)
+		requestHeaders,
+		// Response headers
+		responseHeadersString,
+		responseHeaders,
+		// Done callback
+		done,
+		// transport
+		internal,
+		// timeout handle
+		timeoutTimer,
+		// The send flag
+		sendFlag,
+		// Fake xhr
+		xhr = {
+			// state
+			readyState: 0,
+
+			// Callback
+			onreadystatechange: null,
+
+			// Open
+			open: function(type, url, async, username, password) {
+
+				xhr.abort();
+				reset();
+
+				s = {
+					type: type,
+					url: url,
+					async: async,
+					username: username,
+					password: password
+				};
+
+				setState(1);
+
+				return xhr;
+			},
+
+			// Send
+			send: function(data, moreOptions) {
+
+				checkState(1 , !sendFlag);
+
+				s.data = data;
+
+				s = jQuery.extend( true,
+					{},
+					jQuery.ajaxSettings,
+					s,
+					moreOptions || ( moreOptions === false ? { global: false } : {} ) );
+
+				if ( moreOptions ) {
+					// We force the original context
+					// (plain objects used as context get extended)
+					s.context = moreOptions.context;
+				}
+
+				init();
+
+				// If not internal, abort
+				if ( ! internal ) {
+					done( 0 , &quot;transport not found&quot; );
+					return false;
+				}
+
+				// Allow custom headers/mimetypes and early abort
+				if ( s.beforeSend ) {
+
+					var _s = s;
+
+					if ( s.beforeSend.call(callbackContext, xhr, s) === false || ! xhr.readyState || _s !== s ) {
+
+						// Abort if not done
+						if ( xhr.readyState &amp;&amp; _s === s ) {
+							xhr.abort();
+						}
+
+						// Handle the global AJAX counter
+						if ( _s.global &amp;&amp; ! --jQuery.active ) {
+							jQuery.event.trigger( &quot;ajaxStop&quot; );
+						}
+
+						return false;
+					}
+				}
+
+				sendFlag = 1;
+
+				// Send global event
+				if ( s.global ) {
+					globalEventContext.trigger(&quot;ajaxSend&quot;, [xhr, s]);
+				}
+
+				// Timeout
+				if ( s.async &amp;&amp; s.timeout &gt; 0 ) {
+					timeoutTimer = setTimeout(function(){
+						xhr.abort(&quot;timeout&quot;);
+					}, s.timeout);
+				}
+
+				if ( s.async ) {
+					setState(1);
+				}
+
+				try {
+
+					internal.send(requestHeaders, done);
+					return xhr;
+
+				} catch (e) {
+
+					if ( done ) {
+
+						done(0, &quot;error&quot;, &quot;&quot; + e);
+
+					} else {
+
+						jQuery.error(e);
+
+					}
+				}
+
+				return false;
+			},
+
+			// Caches the header
+			setRequestHeader: function(name,value) {
+				checkState(1, !sendFlag);
+				requestHeaders[ name.toLowerCase() ] = value;
+				return xhr;
+			},
+
+			// Raw string
+			getAllResponseHeaders: function() {
+				return xhr.readyState &lt;= 1 ? &quot;&quot; : responseHeadersString;
+			},
+
+			// Builds headers hashtable if needed
+			getResponseHeader: function( key ) {
+
+				if ( xhr.readyState &lt;= 1 ) {
+
+					return null;
+
+				}
+
+				if ( responseHeaders === undefined ) {
+
+					responseHeaders = {};
+
+					if ( typeof responseHeadersString === &quot;string&quot; ) {
+
+						var match;
+
+						while( ( match = rheaders.exec( responseHeadersString ) ) ) {
+							responseHeaders[ match[ 1 ].toLowerCase() ] = match[ 2 ];
+						}
+					}
+				}
+				return responseHeaders[ key.toLowerCase() ];
+			},
+
+			// Cancel the request
+			abort: function(statusText) {
+				if (internal) {
+					internal.abort( statusText || &quot;abort&quot; );
+				}
+				xhr.readyState = 0;
+			}
+		};
+
+	// Init data (so that we can bind callbacks early
+	reset(1);
+
+	// Return the xhr emulation
+	return xhr;
+};
+
+// Execute or select from functions in a given structure of options
+function xhr_selectOrExecute( structure , s ) {
+
+	var dataTypes = s.dataTypes,
+		transportDataType,
+		list,
+		selected,
+		i,
+		length,
+		checked = {},
+		flag,
+		noSelect = structure !== &quot;transports&quot;;
+		
+	function initSearch( dataType ) {
+
+		flag = transportDataType !== dataType &amp;&amp; ! checked[ dataType ];
+
+		if ( flag ) {
+
+			checked[ dataType ] = 1;
+			transportDataType = dataType;
+			list = s[ structure ][ dataType ];
+			i = -1;
+			length = list ? list.length : 0 ;
+		}
+
+		return flag;
+	}
+
+	initSearch( dataTypes[ 0 ] );
+
+	for ( i = 0 ; ( noSelect || ! selected ) &amp;&amp; i &lt;= length ; i++ ) {
+		
+		if ( i === length ) {
+
+			initSearch( &quot;*&quot; );
+
+		} else {
+
+			selected = list[ i ]( s , determineDataType );
+
+			// If we got redirected to another dataType
+			// Search there (if not in progress or already tried)
+			if ( typeof( selected ) === &quot;string&quot; &amp;&amp;
+				initSearch( selected ) ) {
+
+				dataTypes.unshift( selected );
+				selected = 0;
+			}
+		}
+	}
+
+	return noSelect ? jQuery.xhr : selected;
+}
+
+// Add an element to one of the xhr structures in ajaxSettings
+function xhr_addElement( structure , args ) {
+		
+	var i,
+		j,
+		start = 0,
+		length = args.length,
+		dataTypes = [ &quot;*&quot; ],
+		dLength = 1,
+		dataType,
+		functors = [],
+		first,
+		append,
+		list;
+		
+	if ( length ) {
+		
+		first = jQuery.type( args[ 0 ] );
+		
+		if ( first === &quot;object&quot; ) {
+			return xhr_selectOrExecute( structure , args[ 0 ] );
+		}
+		
+		structure = jQuery.ajaxSettings[ structure ];
+		
+		if ( first !== &quot;function&quot; ) {
+			
+			dataTypes = args[ 0 ].toLowerCase().split(/\s+/);
+			dLength = dataTypes.length;
+			start = 1;
+			
+		}
+		
+		if ( dLength &amp;&amp; start &lt; length ) {
+			
+			functors = sliceFunc.call( args , start );
+			
+			length -= start;
+					
+			for( i = 0 ; i &lt; dLength ; i++ ) {
+				
+				dataType = dataTypes[ i ];
+				
+				first = /^\+/.test( dataType );
+				
+				if (first) {
+					dataType = dataType.substr(1);
+				}
+				
+				if ( dataType !== &quot;&quot; ) {
+				
+					append = Array.prototype[ first ? &quot;unshift&quot; : &quot;push&quot; ];
+					
+					list = structure[ dataType ] = structure[ dataType ] || [];
+			
+					for ( j = 0; j &lt; length; j++ ) {
+						append.call( list , functors[ j ] );
+					}
+				}
+			}
+		}
+	}
+	
+	return jQuery.xhr;
+}
+
+// Install prefilter &amp; transport methods
+jQuery.each( [ &quot;prefilter&quot; , &quot;transport&quot; ] , function( _ , name ) {
+	_ = name + &quot;s&quot;;
+	jQuery.xhr[ name ] = function() {
+		return xhr_addElement( _ , arguments );
+	};
+} );
+	
+// Utility function that handles dataType when response is received
+// (for those transports that can give text or xml responses)
+function determineDataType( s , ct , text , xml ) {
+
+	var autoDataType = s.autoDataType,
+		type,
+		regexp,
+		dataTypes = s.dataTypes,
+		transportDataType = dataTypes[0],
+		response;
+
+	// Auto (xml, json, script or text determined given headers)
+	if ( transportDataType === &quot;*&quot; ) {
+
+		for ( type in autoDataType ) {
+			if ( ( regexp = autoDataType[ type ] ) &amp;&amp; regexp.test( ct ) ) {
+				transportDataType = dataTypes[0] = type;
+				break;
+			}
+		}
+	}
+
+	// xml and parsed as such
+	if ( transportDataType === &quot;xml&quot; &amp;&amp;
+		xml &amp;&amp;
+		xml.documentElement /* #4958 */ ) {
+
+		response = xml;
+
+	// Text response was provided
+	} else {
+
+		response = text;
+
+		// If it&#039;s not really text, defer to dataConverters
+		if ( transportDataType !== &quot;text&quot; ) {
+			dataTypes.unshift( &quot;text&quot; );
+		}
+
+	}
+
+	return response;
+}
+
+})( jQuery );</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

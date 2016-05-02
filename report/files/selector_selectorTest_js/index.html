@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - selector/selectorTest.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>selector/selectorTest.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">58.71</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">202</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">18.22</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">3.43</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">module(&quot;selector&quot;);
+
+test(&quot;element&quot;, function() {
+	expect(9);
+	ok( $(&quot;*&quot;).size() &gt;= 30, &quot;Select all&quot; );
+	var all = $(&quot;*&quot;), good = true;
+	for ( var i = 0; i &lt; all.length; i++ )
+		if ( all[i].nodeType == 8 )
+			good = false;
+	ok( good, &quot;Select all elements, no comment nodes&quot; );
+	t( &quot;Element Selector&quot;, &quot;p&quot;, [&quot;firstp&quot;,&quot;ap&quot;,&quot;sndp&quot;,&quot;en&quot;,&quot;sap&quot;,&quot;first&quot;] );
+	t( &quot;Element Selector&quot;, &quot;body&quot;, [&quot;body&quot;] );
+	t( &quot;Element Selector&quot;, &quot;html&quot;, [&quot;html&quot;] );
+	t( &quot;Parent Element&quot;, &quot;div p&quot;, [&quot;firstp&quot;,&quot;ap&quot;,&quot;sndp&quot;,&quot;en&quot;,&quot;sap&quot;,&quot;first&quot;] );
+	ok( $(&quot;param&quot;, &quot;#object1&quot;).length == 2, &quot;Object/param as context&quot; );
+	
+	ok( $(&quot;#length&quot;).length, &#039;&amp;lt;input name=&quot;length&quot;&amp;gt; cannot be found under IE, see #945&#039; );
+	ok( $(&quot;#lengthtest input&quot;).length, &#039;&amp;lt;input name=&quot;length&quot;&amp;gt; cannot be found under IE, see #945&#039; );
+});
+
+if ( location.protocol != &quot;file:&quot; ) {
+	test(&quot;Element Selector with underscore&quot;, function() {
+		expect(1);
+		stop();
+		$.get(&quot;data/with_fries.xml&quot;, function(xml) {
+			ok( $(&quot;foo_bar&quot;, xml).length == 1, &quot;Element Selector with underscore&quot; );
+			start();
+		});
+	});
+}
+
+test(&quot;broken&quot;, function() {
+	expect(7);
+	t( &quot;Broken Selector&quot;, &quot;[&quot;, [] );
+	t( &quot;Broken Selector&quot;, &quot;(&quot;, [] );
+	t( &quot;Broken Selector&quot;, &quot;{&quot;, [] );
+	t( &quot;Broken Selector&quot;, &quot;&lt;&quot;, [] );
+	t( &quot;Broken Selector&quot;, &quot;()&quot;, [] );
+	t( &quot;Broken Selector&quot;, &quot;&lt;&gt;&quot;, [] );
+	t( &quot;Broken Selector&quot;, &quot;{}&quot;, [] );
+});
+
+test(&quot;id&quot;, function() {
+	expect(25);
+	t( &quot;ID Selector&quot;, &quot;#body&quot;, [&quot;body&quot;] );
+	t( &quot;ID Selector w/ Element&quot;, &quot;body#body&quot;, [&quot;body&quot;] );
+	t( &quot;ID Selector w/ Element&quot;, &quot;ul#first&quot;, [] );
+	t( &quot;ID selector with existing ID descendant&quot;, &quot;#firstp #simon1&quot;, [&quot;simon1&quot;] );
+	t( &quot;ID selector with non-existant descendant&quot;, &quot;#firstp #foobar&quot;, [] );
+	t( &quot;ID selector using UTF8&quot;, &quot;#台北Táiběi&quot;, [&quot;台北Táiběi&quot;] );
+	t( &quot;Multiple ID selectors using UTF8&quot;, &quot;#台北Táiběi, #台北&quot;, [&quot;台北Táiběi&quot;,&quot;台北&quot;] );
+	t( &quot;Descendant ID selector using UTF8&quot;, &quot;div #台北&quot;, [&quot;台北&quot;] );
+	t( &quot;Child ID selector using UTF8&quot;, &quot;form &gt; #台北&quot;, [&quot;台北&quot;] );
+	
+	t( &quot;Escaped ID&quot;, &quot;#foo\\:bar&quot;, [&quot;foo:bar&quot;] );
+	t( &quot;Escaped ID&quot;, &quot;#test\\.foo\\[5\\]bar&quot;, [&quot;test.foo[5]bar&quot;] );
+	t( &quot;Descendant escaped ID&quot;, &quot;div #foo\\:bar&quot;, [&quot;foo:bar&quot;] );
+	t( &quot;Descendant escaped ID&quot;, &quot;div #test\\.foo\\[5\\]bar&quot;, [&quot;test.foo[5]bar&quot;] );
+	t( &quot;Child escaped ID&quot;, &quot;form &gt; #foo\\:bar&quot;, [&quot;foo:bar&quot;] );
+	t( &quot;Child escaped ID&quot;, &quot;form &gt; #test\\.foo\\[5\\]bar&quot;, [&quot;test.foo[5]bar&quot;] );
+	
+	t( &quot;ID Selector, child ID present&quot;, &quot;#form &gt; #radio1&quot;, [&quot;radio1&quot;] );  // bug #267
+	t( &quot;ID Selector, not an ancestor ID&quot;, &quot;#form  #first&quot;, [] );
+	t( &quot;ID Selector, not a child ID&quot;, &quot;#form &gt; #option1a&quot;, [] );
+	
+	t( &quot;All Children of ID&quot;, &quot;#foo &gt; *&quot;, [&quot;sndp&quot;, &quot;en&quot;, &quot;sap&quot;] );
+	t( &quot;All Children of ID with no children&quot;, &quot;#firstUL/*&quot;, [] );
+	
+	$(&#039;&lt;a name=&quot;tName1&quot;&gt;tName1 A&lt;/a&gt;&lt;a name=&quot;tName2&quot;&gt;tName2 A&lt;/a&gt;&lt;div id=&quot;tName1&quot;&gt;tName1 Div&lt;/div&gt;&#039;).appendTo(&#039;#main&#039;);
+	ok( $(&quot;#tName1&quot;)[0].id == &#039;tName1&#039;, &quot;ID selector with same value for a name attribute&quot; );
+	ok( $(&quot;#tName2&quot;).length == 0, &quot;ID selector non-existing but name attribute on an A tag&quot; );
+	t( &quot;ID Selector on Form with an input that has a name of &#039;id&#039;&quot;, &quot;#lengthtest&quot;, [&quot;lengthtest&quot;] );
+	
+	t( &quot;ID selector with non-existant ancestor&quot;, &quot;#asdfasdf #foobar&quot;, [] ); // bug #986
+
+	isSet( $(&quot;body&quot;).find(&quot;div#form&quot;), [], &quot;ID selector within the context of another element&quot; );
+});
+
+test(&quot;class&quot;, function() {
+	expect(16);
+	t( &quot;Class Selector&quot;, &quot;.blog&quot;, [&quot;mark&quot;,&quot;simon&quot;] );
+	t( &quot;Class Selector&quot;, &quot;.blog.link&quot;, [&quot;simon&quot;] );
+	t( &quot;Class Selector w/ Element&quot;, &quot;a.blog&quot;, [&quot;mark&quot;,&quot;simon&quot;] );
+	t( &quot;Parent Class Selector&quot;, &quot;p .blog&quot;, [&quot;mark&quot;,&quot;simon&quot;] );
+	
+	t( &quot;Class selector using UTF8&quot;, &quot;.台北Táiběi&quot;, [&quot;utf8class1&quot;] );
+	t( &quot;Class selector using UTF8&quot;, &quot;.台北&quot;, [&quot;utf8class1&quot;,&quot;utf8class2&quot;] );
+	t( &quot;Class selector using UTF8&quot;, &quot;.台北Táiběi.台北&quot;, [&quot;utf8class1&quot;] );
+	t( &quot;Class selector using UTF8&quot;, &quot;.台北Táiběi, .台北&quot;, [&quot;utf8class1&quot;,&quot;utf8class2&quot;] );
+	t( &quot;Descendant class selector using UTF8&quot;, &quot;div .台北Táiběi&quot;, [&quot;utf8class1&quot;] );
+	t( &quot;Child class selector using UTF8&quot;, &quot;form &gt; .台北Táiběi&quot;, [&quot;utf8class1&quot;] );
+	
+	t( &quot;Escaped Class&quot;, &quot;.foo\\:bar&quot;, [&quot;foo:bar&quot;] );
+	t( &quot;Escaped Class&quot;, &quot;.test\\.foo\\[5\\]bar&quot;, [&quot;test.foo[5]bar&quot;] );
+	t( &quot;Descendant scaped Class&quot;, &quot;div .foo\\:bar&quot;, [&quot;foo:bar&quot;] );
+	t( &quot;Descendant scaped Class&quot;, &quot;div .test\\.foo\\[5\\]bar&quot;, [&quot;test.foo[5]bar&quot;] );
+	t( &quot;Child escaped Class&quot;, &quot;form &gt; .foo\\:bar&quot;, [&quot;foo:bar&quot;] );
+	t( &quot;Child escaped Class&quot;, &quot;form &gt; .test\\.foo\\[5\\]bar&quot;, [&quot;test.foo[5]bar&quot;] );
+});
+
+test(&quot;multiple&quot;, function() {
+	expect(4);
+	t( &quot;Comma Support&quot;, &quot;a.blog, p&quot;, [&quot;mark&quot;,&quot;simon&quot;,&quot;firstp&quot;,&quot;ap&quot;,&quot;sndp&quot;,&quot;en&quot;,&quot;sap&quot;,&quot;first&quot;] );
+	t( &quot;Comma Support&quot;, &quot;a.blog , p&quot;, [&quot;mark&quot;,&quot;simon&quot;,&quot;firstp&quot;,&quot;ap&quot;,&quot;sndp&quot;,&quot;en&quot;,&quot;sap&quot;,&quot;first&quot;] );
+	t( &quot;Comma Support&quot;, &quot;a.blog ,p&quot;, [&quot;mark&quot;,&quot;simon&quot;,&quot;firstp&quot;,&quot;ap&quot;,&quot;sndp&quot;,&quot;en&quot;,&quot;sap&quot;,&quot;first&quot;] );
+	t( &quot;Comma Support&quot;, &quot;a.blog,p&quot;, [&quot;mark&quot;,&quot;simon&quot;,&quot;firstp&quot;,&quot;ap&quot;,&quot;sndp&quot;,&quot;en&quot;,&quot;sap&quot;,&quot;first&quot;] );
+});
+
+test(&quot;child and adjacent&quot;, function() {
+	expect(19);
+	t( &quot;Child&quot;, &quot;p &gt; a&quot;, [&quot;simon1&quot;,&quot;google&quot;,&quot;groups&quot;,&quot;mark&quot;,&quot;yahoo&quot;,&quot;simon&quot;] );
+	t( &quot;Child&quot;, &quot;p&gt; a&quot;, [&quot;simon1&quot;,&quot;google&quot;,&quot;groups&quot;,&quot;mark&quot;,&quot;yahoo&quot;,&quot;simon&quot;] );
+	t( &quot;Child&quot;, &quot;p &gt;a&quot;, [&quot;simon1&quot;,&quot;google&quot;,&quot;groups&quot;,&quot;mark&quot;,&quot;yahoo&quot;,&quot;simon&quot;] );
+	t( &quot;Child&quot;, &quot;p&gt;a&quot;, [&quot;simon1&quot;,&quot;google&quot;,&quot;groups&quot;,&quot;mark&quot;,&quot;yahoo&quot;,&quot;simon&quot;] );
+	t( &quot;Child w/ Class&quot;, &quot;p &gt; a.blog&quot;, [&quot;mark&quot;,&quot;simon&quot;] );
+	t( &quot;All Children&quot;, &quot;code &gt; *&quot;, [&quot;anchor1&quot;,&quot;anchor2&quot;] );
+	t( &quot;All Grandchildren&quot;, &quot;p &gt; * &gt; *&quot;, [&quot;anchor1&quot;,&quot;anchor2&quot;] );
+	t( &quot;Adjacent&quot;, &quot;a + a&quot;, [&quot;groups&quot;] );
+	t( &quot;Adjacent&quot;, &quot;a +a&quot;, [&quot;groups&quot;] );
+	t( &quot;Adjacent&quot;, &quot;a+ a&quot;, [&quot;groups&quot;] );
+	t( &quot;Adjacent&quot;, &quot;a+a&quot;, [&quot;groups&quot;] );
+	t( &quot;Adjacent&quot;, &quot;p + p&quot;, [&quot;ap&quot;,&quot;en&quot;,&quot;sap&quot;] );
+	t( &quot;Comma, Child, and Adjacent&quot;, &quot;a + a, code &gt; a&quot;, [&quot;groups&quot;,&quot;anchor1&quot;,&quot;anchor2&quot;] );
+	
+	t( &quot;First Child&quot;, &quot;p:first-child&quot;, [&quot;firstp&quot;,&quot;sndp&quot;] );
+	t( &quot;Nth Child&quot;, &quot;p:nth-child(1)&quot;, [&quot;firstp&quot;,&quot;sndp&quot;] );
+	
+	t( &quot;Last Child&quot;, &quot;p:last-child&quot;, [&quot;sap&quot;] );
+	t( &quot;Last Child&quot;, &quot;a:last-child&quot;, [&quot;simon1&quot;,&quot;anchor1&quot;,&quot;mark&quot;,&quot;yahoo&quot;,&quot;anchor2&quot;,&quot;simon&quot;] );
+	
+	t( &quot;Nth-child&quot;, &quot;#main form#form &gt; *:nth-child(2)&quot;, [&quot;text2&quot;] );
+	t( &quot;Nth-child&quot;, &quot;#main form#form &gt; :nth-child(2)&quot;, [&quot;text2&quot;] );
+});
+
+test(&quot;attributes&quot;, function() {
+	expect(20);
+	t( &quot;Attribute Exists&quot;, &quot;a[title]&quot;, [&quot;google&quot;] );
+	t( &quot;Attribute Exists&quot;, &quot;*[title]&quot;, [&quot;google&quot;] );
+	t( &quot;Attribute Exists&quot;, &quot;[title]&quot;, [&quot;google&quot;] );
+	
+	t( &quot;Attribute Equals&quot;, &quot;a[rel=&#039;bookmark&#039;]&quot;, [&quot;simon1&quot;] );
+	t( &quot;Attribute Equals&quot;, &#039;a[rel=&quot;bookmark&quot;]&#039;, [&quot;simon1&quot;] );
+	t( &quot;Attribute Equals&quot;, &quot;a[rel=bookmark]&quot;, [&quot;simon1&quot;] );
+	t( &quot;Multiple Attribute Equals&quot;, &quot;#form input[type=&#039;hidden&#039;],#form input[type=&#039;radio&#039;]&quot;, [&quot;hidden1&quot;,&quot;radio1&quot;,&quot;radio2&quot;] );
+	t( &quot;Multiple Attribute Equals&quot;, &quot;#form input[type=\&quot;hidden\&quot;],#form input[type=&#039;radio&#039;]&quot;, [&quot;hidden1&quot;,&quot;radio1&quot;,&quot;radio2&quot;] );
+	t( &quot;Multiple Attribute Equals&quot;, &quot;#form input[type=hidden],#form input[type=radio]&quot;, [&quot;hidden1&quot;,&quot;radio1&quot;,&quot;radio2&quot;] );
+	
+	t( &quot;Attribute selector using UTF8&quot;, &quot;span[lang=中文]&quot;, [&quot;台北&quot;] );
+	
+	t( &quot;Attribute Begins With&quot;, &quot;a[href ^= &#039;http://www&#039;]&quot;, [&quot;google&quot;,&quot;yahoo&quot;] );
+	t( &quot;Attribute Ends With&quot;, &quot;a[href $= &#039;org/&#039;]&quot;, [&quot;mark&quot;] );
+	t( &quot;Attribute Contains&quot;, &quot;a[href *= &#039;google&#039;]&quot;, [&quot;google&quot;,&quot;groups&quot;] );
+	
+	t(&quot;Select options via [selected]&quot;, &quot;#select1 option[selected]&quot;, [&quot;option1a&quot;] );
+	t(&quot;Select options via [selected]&quot;, &quot;#select2 option[selected]&quot;, [&quot;option2d&quot;] );
+	t(&quot;Select options via [selected]&quot;, &quot;#select3 option[selected]&quot;, [&quot;option3b&quot;, &quot;option3c&quot;] );
+	
+	t( &quot;Grouped Form Elements&quot;, &quot;input[name=&#039;foo[bar]&#039;]&quot;, [&quot;hidden2&quot;] );
+	
+	t( &quot;:not() Existing attribute&quot;, &quot;#form select:not([multiple])&quot;, [&quot;select1&quot;, &quot;select2&quot;]);
+	t( &quot;:not() Equals attribute&quot;, &quot;#form select:not([name=select1])&quot;, [&quot;select2&quot;, &quot;select3&quot;]);
+	t( &quot;:not() Equals quoted attribute&quot;, &quot;#form select:not([name=&#039;select1&#039;])&quot;, [&quot;select2&quot;, &quot;select3&quot;]);
+});
+
+test(&quot;pseudo (:) selectors&quot;, function() {
+	expect(32);
+	t( &quot;First Child&quot;, &quot;p:first-child&quot;, [&quot;firstp&quot;,&quot;sndp&quot;] );
+	t( &quot;Last Child&quot;, &quot;p:last-child&quot;, [&quot;sap&quot;] );
+	t( &quot;Only Child&quot;, &quot;a:only-child&quot;, [&quot;simon1&quot;,&quot;anchor1&quot;,&quot;yahoo&quot;,&quot;anchor2&quot;] );
+	t( &quot;Empty&quot;, &quot;ul:empty&quot;, [&quot;firstUL&quot;] );
+	t( &quot;Enabled UI Element&quot;, &quot;#form input:enabled&quot;, [&quot;text1&quot;,&quot;radio1&quot;,&quot;radio2&quot;,&quot;check1&quot;,&quot;check2&quot;,&quot;hidden1&quot;,&quot;hidden2&quot;,&quot;name&quot;] );
+	t( &quot;Disabled UI Element&quot;, &quot;#form input:disabled&quot;, [&quot;text2&quot;] );
+	t( &quot;Checked UI Element&quot;, &quot;#form input:checked&quot;, [&quot;radio2&quot;,&quot;check1&quot;] );
+	t( &quot;Selected Option Element&quot;, &quot;#form option:selected&quot;, [&quot;option1a&quot;,&quot;option2d&quot;,&quot;option3b&quot;,&quot;option3c&quot;] );
+	t( &quot;Text Contains&quot;, &quot;a:contains(&#039;Google&#039;)&quot;, [&quot;google&quot;,&quot;groups&quot;] );
+	t( &quot;Text Contains&quot;, &quot;a:contains(&#039;Google Groups&#039;)&quot;, [&quot;groups&quot;] );
+	t( &quot;Element Preceded By&quot;, &quot;p ~ div&quot;, [&quot;foo&quot;,&quot;fx-queue&quot;,&quot;fx-tests&quot;] );
+	t( &quot;Not&quot;, &quot;a.blog:not(.link)&quot;, [&quot;mark&quot;] );
+	
+	t( &quot;nth Element&quot;, &quot;p:nth(1)&quot;, [&quot;ap&quot;] );
+	t( &quot;First Element&quot;, &quot;p:first&quot;, [&quot;firstp&quot;] );
+	t( &quot;Last Element&quot;, &quot;p:last&quot;, [&quot;first&quot;] );
+	t( &quot;Even Elements&quot;, &quot;p:even&quot;, [&quot;firstp&quot;,&quot;sndp&quot;,&quot;sap&quot;] );
+	t( &quot;Odd Elements&quot;, &quot;p:odd&quot;, [&quot;ap&quot;,&quot;en&quot;,&quot;first&quot;] );
+	t( &quot;Position Equals&quot;, &quot;p:eq(1)&quot;, [&quot;ap&quot;] );
+	t( &quot;Position Greater Than&quot;, &quot;p:gt(0)&quot;, [&quot;ap&quot;,&quot;sndp&quot;,&quot;en&quot;,&quot;sap&quot;,&quot;first&quot;] );
+	t( &quot;Position Less Than&quot;, &quot;p:lt(3)&quot;, [&quot;firstp&quot;,&quot;ap&quot;,&quot;sndp&quot;] );
+	t( &quot;Is A Parent&quot;, &quot;p:parent&quot;, [&quot;firstp&quot;,&quot;ap&quot;,&quot;sndp&quot;,&quot;en&quot;,&quot;sap&quot;,&quot;first&quot;] );
+	t( &quot;Is Visible&quot;, &quot;#form input:visible&quot;, [&quot;text1&quot;,&quot;text2&quot;,&quot;radio1&quot;,&quot;radio2&quot;,&quot;check1&quot;,&quot;check2&quot;,&quot;name&quot;] );
+	t( &quot;Is Hidden&quot;, &quot;#form input:hidden&quot;, [&quot;hidden1&quot;,&quot;hidden2&quot;] );
+	
+	t( &quot;Form element :input&quot;, &quot;#form :input&quot;, [&quot;text1&quot;, &quot;text2&quot;, &quot;radio1&quot;, &quot;radio2&quot;, &quot;check1&quot;, &quot;check2&quot;, &quot;hidden1&quot;, &quot;hidden2&quot;, &quot;name&quot;, &quot;button&quot;, &quot;area1&quot;, &quot;select1&quot;, &quot;select2&quot;, &quot;select3&quot;] );
+	t( &quot;Form element :radio&quot;, &quot;#form :radio&quot;, [&quot;radio1&quot;, &quot;radio2&quot;] );
+	t( &quot;Form element :checkbox&quot;, &quot;#form :checkbox&quot;, [&quot;check1&quot;, &quot;check2&quot;] );
+	t( &quot;Form element :text&quot;, &quot;#form :text&quot;, [&quot;text1&quot;, &quot;text2&quot;, &quot;hidden2&quot;, &quot;name&quot;] );
+	t( &quot;Form element :radio:checked&quot;, &quot;#form :radio:checked&quot;, [&quot;radio2&quot;] );
+	t( &quot;Form element :checkbox:checked&quot;, &quot;#form :checkbox:checked&quot;, [&quot;check1&quot;] );
+	t( &quot;Form element :checkbox:checked, :radio:checked&quot;, &quot;#form :checkbox:checked, #form :radio:checked&quot;, [&quot;check1&quot;, &quot;radio2&quot;] );
+
+	t( &quot;Headers&quot;, &quot;:header&quot;, [&quot;header&quot;, &quot;banner&quot;, &quot;userAgent&quot;] );
+	t( &quot;Has Children - :has()&quot;, &quot;p:has(a)&quot;, [&quot;firstp&quot;,&quot;ap&quot;,&quot;en&quot;,&quot;sap&quot;] );
+});</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>
