@@ -1,4 +1,4 @@
-# Aristotle
+# Aristotle [![Build Status](https://travis-ci.org/neenhouse/Aristotle.svg?branch=master)](https://travis-ci.org/neenhouse/Aristotle)
 
 Run complexity reports on git project and build full sets of data points in pure JSON format
 
